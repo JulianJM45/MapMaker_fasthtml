@@ -1,0 +1,572 @@
+/* Reset default margins and padding */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Make html and body take full viewport */
+html,
+body {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* Fullscreen map container */
+#map {
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+}
+
+/* Control buttons styling */
+.control-btn,
+#download-button,
+#configure-button,
+#gpxButton {
+    position: absolute;
+    right: 10px;
+    z-index: 800;
+    background-color: #f4f4f4;
+    border: 1px solid #ccc;
+    color: #333;
+    padding: 8px 16px;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    display: inline-block;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: none;
+    outline: none;
+}
+
+.control-btn:hover,
+#download-button:hover,
+#configure-button:hover,
+#gpxButton:hover {
+    background-color: #e0e0e0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.control-btn:active,
+#download-button:active,
+#configure-button:active,
+#gpxButton:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    background-color: #d0d0d0;
+}
+
+#download-button {
+    top: 240px;
+}
+
+#configure-button {
+    top: 200px;
+}
+
+#gpxButton {
+    left: 10px;
+    top: 290px;
+    width: 60px;
+}
+
+/* Configuration form styling */
+#configuration-form {
+    position: absolute;
+    top: 240px;
+    right: 10px;
+    background-color: rgba(249, 249, 249, 0.9);
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    display: none;
+    line-height: 2;
+    z-index: 1000;
+}
+
+#configuration-form label {
+    display: inline-block;
+    width: 120px;
+    font-weight: bold;
+}
+
+#configuration-form input {
+    margin-bottom: 5px;
+    padding: 2px 4px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+#configuration-form button {
+    padding: 5px 10px;
+    background-color: #f4f4f4;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    cursor: pointer;
+    margin: 2px;
+}
+
+#configuration-form button:hover {
+    background-color: #e0e0e0;
+}
+
+/* Toggle button styling */
+.button-box {
+    width: 300px;
+    margin: 5px auto;
+    position: relative;
+    border-radius: 30px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border: 2px solid #0fc1ee;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    box-shadow:
+        inset 0 2px 4px rgba(0, 0, 0, 0.1),
+        0 2px 8px rgba(15, 193, 238, 0.2);
+    overflow: hidden;
+}
+
+.toggle-btn {
+    padding: 10px 0;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    outline: none;
+    position: relative;
+    text-align: center;
+    width: 50%;
+    z-index: 2;
+    color: #000;
+    font-weight: normal;
+    transition: none;
+    font-size: 13px;
+    text-shadow: none;
+}
+
+.toggle-btn:hover {
+    color: #000;
+    text-shadow: none;
+    transform: none;
+}
+
+#btn {
+    left: 0%;
+    top: 2px;
+    position: absolute;
+    width: calc(50% - 4px);
+    height: calc(100% - 4px);
+    background: linear-gradient(135deg, #0fc1ee 0%, #4dd0e1 50%, #26c6da 100%);
+    border-radius: 26px;
+    transition: left 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 1;
+    box-shadow:
+        0 2px 6px rgba(15, 193, 238, 0.4),
+        0 0 0 1px rgba(255, 255, 255, 0.2);
+    margin-left: 2px;
+}
+
+/* Log output styling */
+#log {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    width: 300px;
+    height: 200px;
+    overflow: auto;
+    border: 1px solid #000;
+    padding: 10px;
+    background-color: rgba(249, 249, 249, 0.8);
+    z-index: 0;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+}
+
+/* Fix Leaflet zoom control button centering */
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    line-height: 1 !important;
+    font-size: 18px !important;
+    font-weight: bold !important;
+}
+
+/* Leaflet Draw Controls Styling */
+.leaflet-draw {
+    z-index: 1000 !important;
+}
+
+/* Layer Control Z-Index Fix */
+.leaflet-control-layers {
+    z-index: 1001 !important;
+}
+
+.leaflet-control-layers-expanded {
+    z-index: 1002 !important;
+}
+
+.leaflet-draw-toolbar {
+    z-index: 1000 !important;
+    border: 1px solid #ccc !important;
+    border-radius: 4px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+}
+
+.leaflet-draw-toolbar a {
+    background-color: #f4f4f4 !important;
+    border: none !important;
+    border-right: 1px solid #ccc !important;
+    color: #333 !important;
+    text-decoration: none !important;
+    display: block !important;
+    width: 30px !important;
+    height: 30px !important;
+    line-height: 30px !important;
+    text-align: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-weight: bold !important;
+    transition: all 0.2s ease !important;
+}
+
+.leaflet-draw-toolbar a:first-child {
+    border-top-left-radius: 4px !important;
+    border-bottom-left-radius: 4px !important;
+}
+
+.leaflet-draw-toolbar a:last-child {
+    border-top-right-radius: 4px !important;
+    border-bottom-right-radius: 4px !important;
+    border-right: none !important;
+}
+
+.leaflet-draw-toolbar a:hover {
+    background-color: #e0e0e0 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.leaflet-draw-toolbar a:active,
+.leaflet-draw-toolbar a.leaflet-draw-toolbar-button-enabled {
+    transform: translateY(0) !important;
+    background-color: #007bff !important;
+    color: white !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Edit toolbar styling */
+.leaflet-draw-edit-edit,
+.leaflet-draw-edit-remove {
+    background-color: #f4f4f4 !important;
+    border: 1px solid #ccc !important;
+    border-radius: 4px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+    width: 30px !important;
+    height: 30px !important;
+    line-height: 30px !important;
+}
+
+.leaflet-draw-edit-edit:hover,
+.leaflet-draw-edit-remove:hover {
+    background-color: #e0e0e0 !important;
+    transform: translateY(-1px) !important;
+}
+
+/* Search/Geocoder Control Styling */
+.leaflet-control-geocoder {
+    background-color: #f4f4f4 !important;
+    border: 1px solid #ccc !important;
+    border-radius: 4px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+    font-family: Arial, sans-serif !important;
+    z-index: 1001 !important;
+}
+
+.leaflet-control-geocoder-form input {
+    background-color: white !important;
+    border: 1px solid #ccc !important;
+    border-radius: 3px !important;
+    padding: 5px 8px !important;
+    font-size: 14px !important;
+    color: #333 !important;
+}
+
+.leaflet-control-geocoder-form input:focus {
+    border-color: #007bff !important;
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2) !important;
+}
+
+.leaflet-control-geocoder-icon {
+    background-color: #f4f4f4 !important;
+    border: 1px solid #ccc !important;
+    border-radius: 4px !important;
+    width: 30px !important;
+    height: 30px !important;
+    transition: all 0.2s ease !important;
+}
+
+.leaflet-control-geocoder-icon:hover {
+    background-color: #e0e0e0 !important;
+    transform: translateY(-1px) !important;
+}
+
+.leaflet-control-geocoder.leaflet-control-geocoder-expanded {
+    background-color: white !important;
+    border-color: #007bff !important;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2) !important;
+    z-index: 1002 !important;
+}
+
+/* Layer Control Styling */
+.leaflet-control-layers {
+    background-color: rgba(249, 249, 249, 0.95) !important;
+    border: 1px solid #ccc !important;
+    border-radius: 4px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+    font-family: Arial, sans-serif !important;
+    padding: 8px !important;
+    z-index: 1001 !important;
+}
+
+/* Expanded layer control should be even higher */
+.leaflet-control-layers.leaflet-control-layers-expanded {
+    z-index: 1002 !important;
+    background-color: white !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+.leaflet-control-layers-toggle {
+    background-color: #f4f4f4 !important;
+    border: 1px solid #ccc !important;
+    border-radius: 4px !important;
+    width: 30px !important;
+    height: 30px !important;
+    transition: all 0.2s ease !important;
+}
+
+.leaflet-control-layers-toggle:hover {
+    background-color: #e0e0e0 !important;
+    transform: translateY(-1px) !important;
+}
+
+.leaflet-control-layers-list {
+    color: #333 !important;
+    font-size: 14px !important;
+}
+
+.leaflet-control-layers label {
+    font-weight: normal !important;
+    color: #333 !important;
+    margin: 4px 0 !important;
+    cursor: pointer !important;
+}
+
+.leaflet-control-layers input[type="radio"] {
+    margin-right: 8px !important;
+}
+
+/* Zoom Control Styling */
+.leaflet-control-zoom {
+    border: 1px solid #ccc !important;
+    border-radius: 4px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+}
+
+.leaflet-control-zoom a {
+    background-color: #f4f4f4 !important;
+    border: none !important;
+    border-bottom: 1px solid #ccc !important;
+    color: #333 !important;
+    width: 30px !important;
+    height: 30px !important;
+    line-height: 30px !important;
+    font-size: 16px !important;
+    font-weight: bold !important;
+    text-align: center !important;
+    transition: all 0.2s ease !important;
+}
+
+.leaflet-control-zoom a:hover {
+    background-color: #e0e0e0 !important;
+    transform: translateY(-1px) !important;
+}
+
+.leaflet-control-zoom a:active {
+    background-color: #007bff !important;
+    color: white !important;
+    transform: translateY(0) !important;
+}
+
+.leaflet-control-zoom a:first-child {
+    border-top-left-radius: 4px !important;
+    border-top-right-radius: 4px !important;
+}
+
+.leaflet-control-zoom a:last-child {
+    border-bottom-left-radius: 4px !important;
+    border-bottom-right-radius: 4px !important;
+    border-bottom: none !important;
+}
+
+/* Attribution Control */
+.leaflet-control-attribution {
+    background-color: rgba(255, 255, 255, 0.8) !important;
+    border: 1px solid #ccc !important;
+    border-radius: 4px !important;
+    font-size: 11px !important;
+    color: #666 !important;
+    padding: 2px 5px !important;
+}
+
+.leaflet-control-attribution a {
+    color: #007bff !important;
+    text-decoration: none !important;
+}
+
+.leaflet-control-attribution a:hover {
+    text-decoration: underline !important;
+}
+
+/* Enhanced visual feedback for drawing states */
+.leaflet-draw-guide-dash {
+    opacity: 0.8 !important;
+}
+
+.leaflet-draw-tooltip {
+    background-color: rgba(0, 0, 0, 0.8) !important;
+    color: white !important;
+    border-radius: 3px !important;
+    padding: 4px 8px !important;
+    font-size: 12px !important;
+    font-family: Arial, sans-serif !important;
+}
+
+/* Loading states for controls */
+.leaflet-control-geocoder-spinner {
+    border: 2px solid #f3f3f3 !important;
+    border-top: 2px solid #007bff !important;
+    border-radius: 50% !important;
+    animation: spin 1s linear infinite !important;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Cohesive theme for all Leaflet controls */
+.leaflet-control-container .leaflet-control {
+    font-family: Arial, sans-serif !important;
+    font-size: 14px !important;
+}
+
+/* Consistent shadow for all controls */
+.leaflet-control-zoom,
+.leaflet-control-layers,
+.leaflet-control-geocoder,
+.leaflet-draw {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Ensure all control buttons have consistent styling */
+.leaflet-control a,
+.leaflet-control button {
+    color: #333 !important;
+    background-color: #f4f4f4 !important;
+    transition: all 0.2s ease !important;
+}
+
+.leaflet-control a:hover,
+.leaflet-control button:hover {
+    background-color: #e0e0e0 !important;
+    transform: translateY(-1px) !important;
+}
+
+/* Active/pressed state for all controls */
+.leaflet-control a:active,
+.leaflet-control button:active {
+    background-color: #007bff !important;
+    color: white !important;
+    transform: translateY(0) !important;
+}
+
+/* Responsive design for mobile devices */
+@media (max-width: 768px) {
+    #configuration-form {
+        width: 90%;
+        right: 5%;
+    }
+
+    #log {
+        width: 250px;
+        height: 150px;
+    }
+
+    .control-btn,
+    #download-button,
+    #configure-button,
+    #gpxButton {
+        font-size: 12px;
+        padding: 4px 8px;
+    }
+
+    /* Mobile Leaflet Controls */
+    .leaflet-draw-toolbar a {
+        width: 35px !important;
+        height: 35px !important;
+        line-height: 35px !important;
+        font-size: 16px !important;
+    }
+
+    .leaflet-control-zoom a {
+        width: 35px !important;
+        height: 35px !important;
+        line-height: 35px !important;
+        font-size: 18px !important;
+    }
+
+    .leaflet-control-layers-toggle {
+        width: 35px !important;
+        height: 35px !important;
+    }
+
+    .leaflet-control-geocoder-icon {
+        width: 35px !important;
+        height: 35px !important;
+    }
+
+    .leaflet-control-geocoder-form input {
+        font-size: 16px !important;
+        padding: 8px !important;
+        width: 200px !important;
+    }
+
+    .leaflet-control-layers {
+        max-width: 250px !important;
+        font-size: 16px !important;
+    }
+
+    .leaflet-control-attribution {
+        font-size: 10px !important;
+        max-width: 200px !important;
+    }
+}

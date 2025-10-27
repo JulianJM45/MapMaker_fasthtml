@@ -1,0 +1,127 @@
+/*
+Fullscreen map container */
+#map {
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+}
+
+#download-button,
+#configure-button,
+#gpxButton {
+    position: absolute;
+    right: 10px;
+    z-index: 800;
+    background-color: #f4f4f4;
+    border: 1px solid #ccc;
+    color: #333;
+    padding: 5px 10px;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    text-align: center;
+    display: inline-block;
+    text-decoration: none;
+}
+
+#configure-button {
+    top: 130px;
+}
+
+#download-button {
+    top: 170px;
+}
+
+#gpxButton {
+    left: 10px;
+    top: 290px;
+    width: 50px;
+}
+
+#configuration-form {
+    position: absolute;
+    top: 170px;
+    right: 10px;
+    background-color: rgba(249, 249, 249, 0.9);
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    display: none; /* Initially hidden */
+    line-height: 2; /* Adjust line height for more space between lines */
+    z-index: 900; /* Above buttons but below Leaflet controls */
+}
+
+/* Configuration form visibility classes */
+#configuration-form.show {
+    display: block !important;
+}
+
+#configuration-form.hide {
+    display: none !important;
+}
+
+.button-box {
+    width: 300px;
+    margin: 5px auto;
+    position: relative;
+    border-radius: 30px;
+    background: #fff;
+}
+
+.toggle-btn {
+    padding: 10px 0;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    outline: none;
+    position: relative;
+    text-align: center;
+    width: 49%;
+}
+
+#btn {
+    left: 0;
+    top: 0;
+    position: absolute;
+    width: 150px;
+    height: 100%;
+    background: #0fc1ee;
+    border-radius: 30px;
+    transition: 0.5s;
+}
+
+/* Orientation toggle styling */
+.orientation-box {
+    width: 250px;
+    margin: 5px auto;
+}
+
+#orientationBtn {
+    left: 0;
+    top: 0;
+    position: absolute;
+    width: 125px;
+    height: 100%;
+    background: #28a745;
+    border-radius: 30px;
+    transition: 0.5s;
+}
+
+#log {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    width: 300px;
+    height: 200px;
+    overflow: auto;
+    border: 1px solid #000;
+    padding: 10px;
+    background-color: rgba(249, 249, 249, 0.8);
+    z-index: 0;
+    /*z-index: 1000;*/
+}
