@@ -22,6 +22,8 @@ LOCAL_JS = "/static/enhanced_map.js"
 def get_app_headers():
     """Return all CSS and JS headers for the FastHTML app"""
     return (
+        Link(rel="icon", type="image/png", sizes="512x512", href="/static/icon-512.png"),
+
         # CSS files first
         Link(rel="stylesheet", href=LEAFLET_CSS),
         Link(rel="stylesheet", href=LEAFLET_DRAW_CSS),

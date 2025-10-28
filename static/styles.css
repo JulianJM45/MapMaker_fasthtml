@@ -124,4 +124,23 @@ Fullscreen map container */
     background-color: rgba(249, 249, 249, 0.8);
     z-index: 0;
     /*z-index: 1000;*/
+    font-family: "Courier New", monospace;
+    font-size: 12px;
+}
+
+/* Log message styling */
+.log-info {
+    color: #2196f3;
+}
+
+.log-success {
+    color: #4caf50;
+}
+
+.log-warning {
+    color: #ff9800;
+}
+
+.log-error {
+    color: #f44336;
 }

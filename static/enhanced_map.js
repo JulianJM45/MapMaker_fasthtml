@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // #1 add map
+  // #""""1 add m""ap"""""" , ""  """"""(() , ,"" , """" ,,"", """"""
   // var map = L.map("map").setView([49.326662, 8.194021], 7);
   var map = L.map("map").setView([49.326662, 8.194021], 13);
 
@@ -295,8 +295,6 @@ document.addEventListener("DOMContentLoaded", function () {
         leftButton.addEventListener("click", leftClick);
         rightButton.addEventListener("click", rightClick);
 
-        console.log("Toggle buttons initialized successfully");
-
         // Set initial state (PDF default)
         btn.style.left = "50%";
         config.pdf = true;
@@ -545,7 +543,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (layer instanceof L.TileLayer && map.hasLayer(layer)) {
         // Check if the layer is an instance of L.TileLayer and is currently active
         if (layer.options && layer.options.name) {
-          selectedTileLayer = layer.options.name;
+          selectedTileLayer = layer._url;
         }
       }
     });
@@ -571,7 +569,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function sendData(data) {
     // Send the data to the FastHTML backend using fetch
-    fetch("/send_coordinates", {
+    console.log("Sending data:", data);
+    return fetch("/send_coordinates", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
