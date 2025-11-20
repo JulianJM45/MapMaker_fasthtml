@@ -7,11 +7,11 @@ import re
 import img2pdf
 
 from .get_map import *
-from utils import send_message
+# from utils import send_message
 
 
 def render_maps(data):
-    send_message("reiceiving coordinates")
+    # send_message("reiceiving coordinates")
     # send_message('data received'+str(data))
     # print(str(data))
     # Extract coordinates_list and config
@@ -54,11 +54,11 @@ def render_maps(data):
         Overview = True
 
     if Overview:
-        send_message("Loading Overview Map...")
+        # send_message("Loading Overview Map...")
         overviewImage, ovmc = overviewMap(coordinates_list, MAP_STYLE, WIDTH, HEIGHT)
 
     for index, coordinates in enumerate(coordinates_list):
-        send_message(f"Loading Map {index + 1}...")
+        # send_message(f"Loading Map {index + 1}...")
         getMap(index, coordinates, MAP_STYLE, ZOOM)
         # Extract and assign the coordinates to separate variables
 
@@ -108,7 +108,7 @@ def render_maps(data):
     # if os.path.exists("MyMaps"):
     #     shutil.rmtree("MyMaps")
 
-    send_message("Downloading Maps ...")
+    # send_message("Downloading Maps ...")
 
     return file_path, file_name
 
@@ -119,7 +119,9 @@ def drawMapInOverview(overviewImage, ovmc, coordinates, index):
     draw = ImageDraw.Draw(transparent_layer)
     fill_color = (0, 100, 255, 30)  # Blue with 50% transparency (RGBA)
     outline_color = (24, 116, 205, 200)  # Blue without transparency (RGB)
-    nwLon, seLat, seLon, nwLat = coordinates
+    nwLat, nwLon = coordinates['Northwest']
+    seLat, seLon = coordinates['SouthEast']
+    # nwLon, seLat, seLon, nwLat = coordinates
     x1 = width * (abs(nwLon - ovmc[1]) / abs(ovmc[1] - ovmc[3]))
     y1 = height * (abs(nwLat - ovmc[0]) / abs(ovmc[0] - ovmc[2]))
     x2 = width * (abs(seLon - ovmc[1]) / abs(ovmc[1] - ovmc[3]))
@@ -146,9 +148,11 @@ def drawMapInOverview(overviewImage, ovmc, coordinates, index):
 def overviewMap(coordinates_list, MAP_STYLE, WIDTH, HEIGHT):
     # Initialize variables to store the maximum values
     max_north = max_south = max_east = max_west = None
-    # Iterate through the coordinates_list
+
     for coordinates in coordinates_list:
-        nwLon, seLat, seLon, nwLat = coordinates
+        nwLat, nwLon = coordinates['Northwest']
+        seLat, seLon = coordinates['SouthEast']
+        # nwLon, seLat, seLon, nwLat = coordinates
 
         if max_north is None or nwLat > max_north:
             max_north = nwLat
@@ -158,6 +162,13 @@ def overviewMap(coordinates_list, MAP_STYLE, WIDTH, HEIGHT):
             max_east = seLon
         if max_west is None or nwLon < max_west:
             max_west = nwLon
+
+    # At this point, all max_ variables should be set to float values
+    # Add type assertions to help the type checker
+    assert max_north is not None
+    assert max_south is not None
+    assert max_east is not None
+    assert max_west is not None
 
     max_north = max_north + 0.01
     max_west = max_west - 0.01
@@ -281,11 +292,12 @@ def upscaling(map_file, print_message):
     ]
     # Run the command
     process = subprocess.Popen(command, stderr=subprocess.PIPE, text=True)
-    for line in iter(process.stderr.readline, ""):
-        print(line, end="")
-        # Extract the number
-        match = re.search(r"(\d+.\d+)%", line)
-        if match:
-            number = float(match.group(1).replace(",", "."))
-            # print('Progress:', number)
-            print_message(f"upscaling {map_file_without_extension}:\u2003{number}%")
+    if process.stderr is not None:
+        for line in iter(process.stderr.readline, ""):
+            print(line, end="")
+            # Extract the number
+            match = re.search(r"(\d+.\d+)%", line)
+            if match:
+                number = float(match.group(1).replace(",", "."))
+                # print('Progress:', number)
+                print_message(f"upscaling {map_file_without_extension}:\u2003{number}%")

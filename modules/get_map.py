@@ -14,11 +14,9 @@ ECF = 40075016.686   # Earth's circumference around the equator
 myfont = "/python-docker/fonts/DejaVuSansMono.ttf"
 
 def getMap(index, coordinates, MAP_STYLE, ZOOM):
-    # [[8.062807464783424, 49.33589969590626, 8.162110900695096, 49.381115807549115]]
-
-    nwLon, seLat, seLon, nwLat = coordinates
-
-
+    nwLat, nwLon = coordinates['Northwest']
+    seLat, seLon = coordinates['SouthEast']
+    # nwLon, seLat, seLon, nwLat = coordinates
 
     WIDTH_METERS, HEIGHT_METERS = getMetersFromCoordinates(nwLat, seLat, seLon, nwLon)
     # Calculate tiles
@@ -186,26 +184,40 @@ def num2deg(x, y, ZOOM):
 
 
 def draw_firepits(image, coordinates, s_pixel):
-    # nwLat, nwLon = coordinates['Northwest']
-    # seLat, seLon = coordinates['SouthEast']
-    nwLon, seLat, seLon, nwLat = coordinates
+    nwLat, nwLon = coordinates['Northwest']
+    seLat, seLon = coordinates['SouthEast']
+    # nwLon, seLat, seLon, nwLat = coordinates
 
+    try:
+        positions = []
+        firepits = get_firepits(nwLat, nwLon, seLat, seLon)
 
-    positions = []
-    for firepit in get_firepits(nwLat, nwLon, seLat, seLon):
-        # x_meters, y_meters = getMetersFromCoordinates(nwLat, firepit[0], firepit[1], nwLon)
-        # x, y = int(x_meters / s_pixel), int(y_meters / s_pixel)
-        x,y = get_xy(firepit[0], firepit[1], coordinates, image.width, image.height)
-        positions.append((x, y))
+        if not firepits:
+            print("No firepits found or API failed, skipping firepit overlay")
+            return image
 
-    current_dir = os.path.dirname(os.path.realpath(__file__))
-    parent_dir = os.path.dirname(current_dir)
-    icon_path = os.path.join(parent_dir, 'icons/120px-Firepit.png')
+        for firepit in firepits:
+            # x_meters, y_meters = getMetersFromCoordinates(nwLat, firepit[0], firepit[1], nwLon)
+            # x, y = int(x_meters / s_pixel), int(y_meters / s_pixel)
+            x,y = get_xy(firepit[0], firepit[1], coordinates, image.width, image.height)
+            positions.append((x, y))
 
-    icon = Image.open(icon_path)
-    icon = icon.resize((20, 20))
+        current_dir = os.path.dirname(os.path.realpath(__file__))
+        parent_dir = os.path.dirname(current_dir)
+        icon_path = os.path.join(parent_dir, 'icons/120px-Firepit.png')
 
-    iamge = overlay_image(image, icon, positions)
+        if not os.path.exists(icon_path):
+            print(f"Firepit icon not found at {icon_path}, skipping firepit overlay")
+            return image
+
+        icon = Image.open(icon_path)
+        icon = icon.resize((20, 20))
+    except Exception as e:
+        print(f"Error in draw_firepits: {e}")
+        print("Continuing without firepit overlay")
+        return image
+
+    image = overlay_image(image, icon, positions)
     icon.close()
     return image
 
@@ -225,20 +237,43 @@ def get_firepits(nwLat, nwLon, seLat, seLon):
     );
     out center;
     """
-    response = requests.get(overpass_url, params={'data': overpass_query})
-    data = response.json()
+
+    try:
+        response = requests.get(overpass_url, params={'data': overpass_query}, timeout=10)
+        print(f"Overpass API response status: {response.status_code}")
+
+        if response.status_code != 200:
+            print(f"Overpass API returned status {response.status_code}: {response.text}")
+            return []
+
+        if not response.text.strip():
+            print("Overpass API returned empty response")
+            return []
+
+        data = response.json()
+        print(f"Overpass API returned {len(data.get('elements', []))} firepit elements")
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error making request to Overpass API: {e}")
+        return []
+    except ValueError as e:
+        print(f"Error parsing JSON response from Overpass API: {e}")
+        print(f"Response text: {response.text[:500]}")  # First 500 chars for debugging
+        return []
 
     firepits = []
-    for element in data['elements']:
+    for element in data.get('elements', []):
             if 'lat' in element and 'lon' in element:
                     firepits.append((element['lat'], element['lon']))
             elif 'center' in element:
                     firepits.append((element['center']['lat'], element['center']['lon']))
 
-    return(firepits)
+    return firepits
 
 def get_xy(lat, lon, coordinates, pix_w, pix_h):
-    nwLon, seLat, seLon, nwLat = coordinates
+    nwLat, nwLon = coordinates['Northwest']
+    seLat, seLon = coordinates['SouthEast']
+    # nwLon, seLat, seLon, nwLat = coordinates
 
     x= int((lon - nwLon) / (seLon - nwLon) * pix_w)
     y= int((lat - nwLat) / (seLat - nwLat) * pix_h)

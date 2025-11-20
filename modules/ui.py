@@ -5,38 +5,76 @@ from fasthtml.common import *
 from .config import DEFAULT_CONFIG, get_local_script
 import json
 
-def get_control_buttons():
-    """Create the main control buttons for the map interface"""
-    download_btn = Button(
-        "Download",
-        id="download-button",
-        cls="control-btn",
+# External CSS dependencies
+LEAFLET_CSS = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+LEAFLET_DRAW_CSS = "https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css"
+LEAFLET_GEOCODER_CSS = "https://unpkg.com/leaflet-control-geocoder@1.13.0/dist/Control.Geocoder.css"
+
+# External JS dependencies
+LEAFLET_JS = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+LEAFLET_DRAW_JS = "https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"
+LEAFLET_GPX_JS = "https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.5.1/gpx.min.js"
+LEAFLET_GEOCODER_JS = "https://unpkg.com/leaflet-control-geocoder@1.13.0/dist/Control.Geocoder.js"
+
+# Local static files
+LOCAL_CSS = "/static/styles.css"
+LOCAL_JS = "/static/scrips.js"
+
+# Default configuration values
+DEFAULT_CONFIG = {
+    "width": 288,
+    "height": 201,
+    "scale": 25000,
+    "zoom": 14,
+    "autoZoom": True,
+    "upscale": False,
+    "overview": False,
+    "pdf": True,
+    "orientation": "landscape"
+}
+
+
+def header():
+    head = (
+        Title("MapMaker fasthtml"),
+        # icon
+        Link(rel="icon", type="image/png", sizes="512x512", href="/icons/icon-512.png"),
+
+        # CSS files
+        Link(rel="stylesheet", href=LEAFLET_CSS),
+        Link(rel="stylesheet", href=LEAFLET_DRAW_CSS),
+        Link(rel="stylesheet", href=LEAFLET_GEOCODER_CSS),
+        Link(rel="stylesheet", href=LOCAL_CSS),
+
+        # External JS files
+        Script(src=LEAFLET_JS),
+        Script(src=LEAFLET_DRAW_JS),
+        Script(src=LEAFLET_GPX_JS),
+        Script(src=LEAFLET_GEOCODER_JS),
+
+        # local JS files
+        Script(src=LOCAL_JS),
+        )
+    return head
+
+def body():
+    body=(
+        Div(id="map"),
+        Button("Download", id="download-button", cls="control-btn", ws_send='start'),
+        Button("Configure", id="configure-button", cls="control-btn"),
+        Button("GPX", id="gpxButton", cls="control-btn"),
+        Input(type="file", id="gpxFileInput", style="display: none;"),
+        configuration_form(),
+        Div(id="log"),
     )
+    return body
 
-    configure_btn = Button(
-        "Configure",
-        id="configure-button",
-        cls="control-btn",
-    )
 
-    gpx_btn = Button(
-        "GPX",
-        id="gpxButton",
-        cls="control-btn",
-        style="left: 10px; top: 290px; width: 60px;"
-    )
 
-    return download_btn, configure_btn, gpx_btn
 
-def get_file_inputs():
-    """Create hidden file input elements"""
-    return Input(
-        type="file",
-        id="gpxFileInput",
-        style="display: none;"
-    )
 
-def get_configuration_form():
+
+def configuration_form():
     """Create the configuration form panel"""
     return Div(
         H3("Edit Configuration"),
@@ -146,40 +184,4 @@ def get_orientation_toggle():
             ),
             cls="button-box orientation-box"
         )
-    )
-
-def get_log_panel():
-    """Create the log output panel"""
-    return Div(id="log")
-
-def get_map_container():
-    """Create the main map container"""
-    return Div(id="map")
-
-def get_main_page():
-    """Create the complete main page with all components"""
-    # Get all components
-    download_btn, configure_btn, gpx_btn = get_control_buttons()
-    file_inputs = get_file_inputs()
-    config_form = get_configuration_form()
-    log_panel = get_log_panel()
-    map_container = get_map_container()
-
-    # Create JavaScript config initialization script
-    config_script = Script(f"""
-        window.DEFAULT_CONFIG = {json.dumps(DEFAULT_CONFIG)};
-    """)
-
-    # Return complete page
-    return Titled(
-        "MapMaker FastHTML",
-        map_container,
-        download_btn,
-        configure_btn,
-        gpx_btn,
-        file_inputs,
-        config_form,
-        log_panel,
-        config_script,
-        get_local_script()
     )
