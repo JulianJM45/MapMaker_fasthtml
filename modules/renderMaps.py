@@ -58,7 +58,7 @@ async def render_maps(data, ws_send=None):
         if ws_send:
             await ws_send("Loading Overview Map...")
             await asyncio.sleep(0.01)  # Allow message to be sent
-        overviewImage, ovmc = overviewMap(coordinates_list, MAP_STYLE, WIDTH, HEIGHT)
+        overviewImage, ovmc = overviewMap(coordinates_list, MAP_STYLE, WIDTH, HEIGHT, tmpdir)
 
     for index, coordinates in enumerate(coordinates_list):
         if ws_send:
@@ -75,9 +75,12 @@ async def render_maps(data, ws_send=None):
             overviewImage = drawMapInOverview(overviewImage, ovmc, coordinates, index)
 
     # Delete the "tiles" directory and its contents
-    if os.path.exists("tiles"):
-        shutil.rmtree("tiles")
-        pass
+    tiles_dir = os.path.join(str(tmpdir), "tiles")
+    if os.path.exists(tiles_dir):
+        if ws_send:
+            await ws_send("Cleaning up tiles...")
+            await asyncio.sleep(0.01)
+        shutil.rmtree(tiles_dir)
 
     # Upscale the images if applicable
     # if upscale:
@@ -159,7 +162,8 @@ def drawMapInOverview(overviewImage, ovmc, coordinates, index):
     return overviewImage
 
 
-def overviewMap(coordinates_list, MAP_STYLE, WIDTH, HEIGHT):
+def overviewMap(coordinates_list, MAP_STYLE, WIDTH, HEIGHT, tmpdir):
+    tiles_dir = os.path.join(str(tmpdir), "tiles")
     # Initialize variables to store the maximum values
     max_north = max_south = max_east = max_west = None
 
@@ -224,9 +228,9 @@ def overviewMap(coordinates_list, MAP_STYLE, WIDTH, HEIGHT):
         max_east,
     ]  # ovmc stands for overview map coordinates
     print("Downloading Overview Map ...")
-    download_tiles(x1, x2, y1, y2, ZOOM, MAP_STYLE)
+    download_tiles(x1, x2, y1, y2, ZOOM, MAP_STYLE, tiles_dir)
     # create output Image
-    overviewImage, tile_size = stitchTiles(x1, x2, y1, y2, ZOOM)
+    overviewImage, tile_size = stitchTiles(x1, x2, y1, y2, ZOOM, tiles_dir)
 
     # Calculate Pixels per Meter
     s_pixel = ECF * math.cos(math.radians(latitude)) / (2.0**ZOOM * tile_size)

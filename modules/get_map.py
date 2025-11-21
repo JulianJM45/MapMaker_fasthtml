@@ -14,6 +14,8 @@ ECF = 40075016.686   # Earth's circumference around the equator
 myfont = "/python-docker/fonts/DejaVuSansMono.ttf"
 
 def getMap(index, coordinates, MAP_STYLE, ZOOM, tmpdir):
+    tiles_dir = os.path.join(str(tmpdir), "tiles")
+    # print(f"Using tiles directory: {tiles_dir}")
     nwLat, nwLon = coordinates['Northwest']
     seLat, seLon = coordinates['SouthEast']
     # nwLon, seLat, seLon, nwLat = coordinates
@@ -27,9 +29,9 @@ def getMap(index, coordinates, MAP_STYLE, ZOOM, tmpdir):
 
     # Download Tiles
     print(f"Downloading Map {index+1} ...")
-    download_tiles(x1, x2, y1, y2, ZOOM, MAP_STYLE)
+    download_tiles(x1, x2, y1, y2, ZOOM, MAP_STYLE, tiles_dir)
     #create output Image
-    output_image, tile_size = stitchTiles(x1, x2, y1, y2, ZOOM)
+    output_image, tile_size = stitchTiles(x1, x2, y1, y2, ZOOM, tiles_dir)
 
     # Calculate Pixels per Meter
     latitude = math.radians((nwLat + seLat) / 2)
@@ -79,7 +81,7 @@ def label(image, s_pixel, index):
     return image
 
 
-def stitchTiles(x1, x2, y1, y2, ZOOM):
+def stitchTiles(x1, x2, y1, y2, ZOOM, tiles_dir):
     # Initialize List for Tile Images
     tile_images = []
 
@@ -87,7 +89,7 @@ def stitchTiles(x1, x2, y1, y2, ZOOM):
     for y in range(y1, y2 + 1):
         row_images = []
         for x in range(x1, x2 + 1):
-            tile_filename = f"tiles/{ZOOM}_{x}_{y}.png"
+            tile_filename = os.path.join(tiles_dir, f"{ZOOM}_{x}_{y}.png")
             tile_image = Image.open(tile_filename)
             row_images.append(tile_image)
         tile_images.append(row_images)
@@ -105,7 +107,7 @@ def stitchTiles(x1, x2, y1, y2, ZOOM):
             x_offset += tile_image.width
         y_offset += row_images[0].height
 
-    tile_size, _ = Image.open(f'tiles/{ZOOM}_{x1}_{y1}.png').size
+    tile_size, _ = Image.open(os.path.join(tiles_dir, f'{ZOOM}_{x1}_{y1}.png')).size
     # print(f"Tile size: {tile_size}")
 
     return output_image, tile_size
@@ -122,10 +124,10 @@ def cropBorders(northwest_latitude, northwest_longitude, lon1, lat1, s_pixel, pi
     return cropped_image
 
 
-def download_tiles(x1, x2, y1, y2, ZOOM, MAP_STYLE):
+def download_tiles(x1, x2, y1, y2, ZOOM, MAP_STYLE, tiles_dir):
     # Create Directory for Tiles
-    if not os.path.exists("tiles"):
-        os.makedirs("tiles")
+    if not os.path.exists(tiles_dir):
+        os.makedirs(tiles_dir)
 
     z = ZOOM
     # Loop Through Tiles and Download
@@ -134,7 +136,7 @@ def download_tiles(x1, x2, y1, y2, ZOOM, MAP_STYLE):
         for y in range(y1, y2 + 1):
             tile_url = MAP_STYLE.format(z=z, x=x, y=y)
             # print(tile_url)
-            tile_filename = f"tiles/{ZOOM}_{x}_{y}.png"
+            tile_filename = os.path.join(tiles_dir, f"{ZOOM}_{x}_{y}.png")
             if not os.path.exists(tile_filename):
                 for attempt in range(3):  # Try up to 3 times
                     try:
