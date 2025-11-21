@@ -69,7 +69,8 @@ document.addEventListener("DOMContentLoaded", function () {
     // console.log(message);
     document.getElementById("log").innerText = message;
   }
-  showMessage("Hello, World!");
+  // showMessage("Hello, World!");
+  document.getElementById("log").style.zIndex = "0";
 
   // #3 map tools
 
@@ -568,7 +569,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function sendData(data) {
     // Send the data to the FastHTML backend using fetch
-    console.log("Sending data:", data);
     return fetch("/send_coordinates", {
       method: "POST",
       headers: {
@@ -614,8 +614,10 @@ document.addEventListener("DOMContentLoaded", function () {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
 
-        console.log("Download initiated for:", filename);
-        // showMessage("Map downloaded successfully!");
+        // console.log("Download initiated for:", filename);
+        showMessage("Map downloaded successfully!");
+
+        document.getElementById("log").style.zIndex = "0";
       })
       .catch((error) => {
         console.error("Error:", error);

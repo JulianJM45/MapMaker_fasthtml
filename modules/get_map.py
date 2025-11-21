@@ -133,7 +133,7 @@ def download_tiles(x1, x2, y1, y2, ZOOM, MAP_STYLE):
     for x in range(x1, x2 + 1):
         for y in range(y1, y2 + 1):
             tile_url = MAP_STYLE.format(z=z, x=x, y=y)
-            print(tile_url)
+            # print(tile_url)
             tile_filename = f"tiles/{ZOOM}_{x}_{y}.png"
             if not os.path.exists(tile_filename):
                 for attempt in range(3):  # Try up to 3 times

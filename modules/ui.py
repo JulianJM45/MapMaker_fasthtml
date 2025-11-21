@@ -65,7 +65,7 @@ def body():
         Button("GPX", id="gpxButton", cls="control-btn"),
         Input(type="file", id="gpxFileInput", style="display: none;"),
         configuration_form(),
-        Div(id="log"),
+        # Div(Div(id="log")),
     )
     return body
 

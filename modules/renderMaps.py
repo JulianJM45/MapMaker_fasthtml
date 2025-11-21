@@ -5,14 +5,16 @@ import io
 import shutil
 import re
 import img2pdf
+import asyncio
 
 from .get_map import *
 # from utils import send_message
 
 
-def render_maps(data):
-    # send_message("reiceiving coordinates")
-    # send_message('data received'+str(data))
+async def render_maps(data, ws_send=None):
+    if ws_send:
+        await ws_send("Receiving coordinates...")
+        await asyncio.sleep(0.01)  # Allow message to be sent
     # print(str(data))
     # Extract coordinates_list and config
     coordinates_list = data.get("coordinates_list", [])
@@ -33,10 +35,6 @@ def render_maps(data):
     Overview = config.get("overview")
     PDF = config.get("pdf")
 
-    # send_message('Map style: ' + MAP_STYLE)
-    # send_message('Width: ' + str(WIDTH))
-    # send_message('Height: ' + str(HEIGHT))
-
     # print("Sending coordinates to Python:", coordinates_list)
     # print("Selected Tile Layer:", MAP_STYLE)
     # if upscale: print("upscaling")
@@ -54,11 +52,15 @@ def render_maps(data):
         Overview = True
 
     if Overview:
-        # send_message("Loading Overview Map...")
+        if ws_send:
+            await ws_send("Loading Overview Map...")
+            await asyncio.sleep(0.01)  # Allow message to be sent
         overviewImage, ovmc = overviewMap(coordinates_list, MAP_STYLE, WIDTH, HEIGHT)
 
     for index, coordinates in enumerate(coordinates_list):
-        # send_message(f"Loading Map {index + 1}...")
+        if ws_send:
+            await ws_send(f"Loading Map {index + 1}/{len(coordinates_list)}...")
+            await asyncio.sleep(0.01)  # Allow message to be sent
         getMap(index, coordinates, MAP_STYLE, ZOOM)
         # Extract and assign the coordinates to separate variables
 
@@ -90,11 +92,17 @@ def render_maps(data):
         image_paths.append("MyMaps/OverviewMap.png")
 
     if PDF:
+        if ws_send:
+            await ws_send("Generating PDF...")
+            await asyncio.sleep(0.01)
         print("Image paths:", image_paths)
         file_path = PDFgen(image_paths)
         print("pdf finished :)")
 
     elif len(image_paths) > 1:
+        if ws_send:
+            await ws_send("Creating ZIP archive...")
+            await asyncio.sleep(0.01)
         file_path = Zipgen(image_paths)
         print("zip finished :)")
 
@@ -108,7 +116,9 @@ def render_maps(data):
     # if os.path.exists("MyMaps"):
     #     shutil.rmtree("MyMaps")
 
-    # send_message("Downloading Maps ...")
+    if ws_send:
+        await ws_send("Maps ready! Starting download...")
+        await asyncio.sleep(0.01)  # Allow final message to be sent
 
     return file_path, file_name
 
