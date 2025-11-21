@@ -10,8 +10,8 @@ ECF = 40075016.686   # Earth's circumference around the equator
 
 
 # icon_path = 'icons/120px-Firepit.png'
+myfont = os.path.join(os.path.dirname(__file__), "DejaVuSansMono.ttf")
 
-myfont = "/modules/DejaVuSansMono.ttf"
 
 def getMap(index, coordinates, MAP_STYLE, ZOOM, tmpdir):
     tiles_dir = os.path.join(str(tmpdir), "tiles")

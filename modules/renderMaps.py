@@ -147,7 +147,15 @@ def drawMapInOverview(overviewImage, ovmc, coordinates, index):
     draw.rectangle([x1, y1, x2, y2], outline=outline_color, width=4)
     # Add a number in the middle of the rectangle
     number = str(index + 1)
-    font = ImageFont.truetype(myfont, size=50)  # Adjust the path and size
+    # Use the font from modules directory with error handling
+    myfont = os.path.join(os.path.dirname(__file__), "DejaVuSansMono.ttf")
+    try:
+        if os.path.exists(myfont):
+            font = ImageFont.truetype(myfont, size=50)
+        else:
+            font = ImageFont.load_default()
+    except (OSError, IOError):
+        font = ImageFont.load_default()
     text_x = (x1 + x2) // 2
     text_y = (y1 + y2) // 2
     draw.text(

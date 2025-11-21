@@ -1,4 +1,5 @@
 # %%
+import asyncio
 from modules.renderMaps import render_maps
 
 coordinate_example = [
@@ -32,9 +33,19 @@ data = {
     },
 }
 data = {'coordinates_list': [{'Northwest': [49.34840125457684, 8.102150918109585], 'SouthEast': [49.303185142933984, 8.201388358013466]}], 'config': {'tileLayer': 'https://a.tile.openstreetmap.de/{z}/{x}/{y}.png', 'width': 288, 'height': 201, 'scale': 25000, 'zoom': 14, 'autoZoom': True, 'pdf': True}}
-data = {'coordinates_list': [{'Northwest': [49.37714603607883, 8.066416361069068], 'SouthEast': [49.33192992443597, 8.165711782241482]}, {'Northwest': [49.34521232737785, 8.132624025865104], 'SouthEast': [49.29999621573499, 8.231855039076306]}], 'config': {'tileLayer': 'https://a.tile.openstreetmap.de/{z}/{x}/{y}.png', 'width': 288, 'height': 201, 'scale': 25000, 'zoom': 14, 'autoZoom': True, 'pdf': False}}
+# data = {'coordinates_list': [{'Northwest': [49.37714603607883, 8.066416361069068], 'SouthEast': [49.33192992443597, 8.165711782241482]}, {'Northwest': [49.34521232737785, 8.132624025865104], 'SouthEast': [49.29999621573499, 8.231855039076306]}], 'config': {'tileLayer': 'https://a.tile.openstreetmap.de/{z}/{x}/{y}.png', 'width': 288, 'height': 201, 'scale': 25000, 'zoom': 14, 'autoZoom': True, 'pdf': False}}
 # print(data)
 
 
-file_path, file_name = render_maps(data)
+# file_path, file_name = render_maps(data)
+async def ws(msg):
+    print(msg)
+
+async def test_render_maps():
+    file_path, file_name, tmpdir = await render_maps(data, ws)
+    print(f"Generated: {file_name} at {file_path}")
+    print(f"Temp directory: {tmpdir}")
+
+# Run the async function
+asyncio.run(test_render_maps())
 # print("hello world")
