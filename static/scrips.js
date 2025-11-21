@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // var map = L.map("map").setView([49.326662, 8.194021], 7);
-  var map = L.map("map").setView([49.326662, 8.194021], 13);
+  var map = L.map("map").setView([49.326662, 8.194021], 7);
+  // var map = L.map("map").setView([49.326662, 8.194021], 13);
 
   var openStreetMapLayer = L.tileLayer(
     "https://a.tile.openstreetmap.de/{z}/{x}/{y}.png",
