@@ -1,4 +1,6 @@
 import os
+import tempfile
+from pathlib import Path
 import subprocess
 import zipfile
 import io
@@ -43,8 +45,9 @@ async def render_maps(data, ws_send=None):
     # if AutoZoom: ZOOM = getZoom(max_distance *SCALE/1000)
     # print (ZOOM)
 
-    if not os.path.exists("MyMaps"):
-        os.makedirs("MyMaps")
+    tmpdir = Path(tempfile.mkdtemp(prefix="mymaps_"))
+    # if not os.path.exists("MyMaps"):
+    #     os.makedirs("MyMaps")
     odd_maps = []
     even_maps = []
 
@@ -61,13 +64,13 @@ async def render_maps(data, ws_send=None):
         if ws_send:
             await ws_send(f"Loading Map {index + 1}/{len(coordinates_list)}...")
             await asyncio.sleep(0.01)  # Allow message to be sent
-        getMap(index, coordinates, MAP_STYLE, ZOOM)
+        getMap(index, coordinates, MAP_STYLE, ZOOM, tmpdir)
         # Extract and assign the coordinates to separate variables
 
         if index % 2 == 0:
-            odd_maps.append(f"./MyMaps/Map{index + 1}.png")
+            odd_maps.append(str(tmpdir / f"Map{index + 1}.png"))
         else:
-            even_maps.append(f"./MyMaps/Map{index + 1}.png")
+            even_maps.append(str(tmpdir / f"Map{index + 1}.png"))
         if Overview:
             overviewImage = drawMapInOverview(overviewImage, ovmc, coordinates, index)
 
@@ -82,32 +85,33 @@ async def render_maps(data, ws_send=None):
     #     map_files = os.listdir('MyMaps')
     #     for map_file in map_files:
     #         if 'OverviewMap' in map_file: continue  # Skip this iteration
-    #         upscaling(map_file, send_message_to_js)
+    #         upscaling(map_file, send_message_to_js, tmpdir)
     #     print('upscale finished :)')
     #     send_message_to_js("Upscale finished")
 
     image_paths = odd_maps + even_maps
     if Overview:
-        overviewImage.save("MyMaps/OverviewMap.png")
-        image_paths.append("MyMaps/OverviewMap.png")
+        overview_path = str(tmpdir / "OverviewMap.png")
+        overviewImage.save(overview_path)
+        image_paths.append(overview_path)
 
     if PDF:
         if ws_send:
             await ws_send("Generating PDF...")
             await asyncio.sleep(0.01)
         print("Image paths:", image_paths)
-        file_path = PDFgen(image_paths)
+        file_path = PDFgen(image_paths, tmpdir)
         print("pdf finished :)")
 
     elif len(image_paths) > 1:
         if ws_send:
             await ws_send("Creating ZIP archive...")
             await asyncio.sleep(0.01)
-        file_path = Zipgen(image_paths)
+        file_path = Zipgen(image_paths, tmpdir)
         print("zip finished :)")
 
     else:
-        file_path = "./MyMaps/Map1.png"
+        file_path = str(tmpdir / "Map1.png")
         # Maps = PNGgen(image_paths)
         # print('png finished :)')
 
@@ -120,7 +124,7 @@ async def render_maps(data, ws_send=None):
         await ws_send("Maps ready! Starting download...")
         await asyncio.sleep(0.01)  # Allow final message to be sent
 
-    return file_path, file_name
+    return file_path, file_name, str(tmpdir)
 
 
 def drawMapInOverview(overviewImage, ovmc, coordinates, index):
@@ -236,7 +240,7 @@ def overviewMap(coordinates_list, MAP_STYLE, WIDTH, HEIGHT):
     return overviewImage, ovmc
 
 
-def PDFgen(image_paths):
+def PDFgen(image_paths, tmpdir):
     # Read each image in binary mode
     image_bytes_list = []
     for path in image_paths:
@@ -250,9 +254,9 @@ def PDFgen(image_paths):
     # Ensure the buffer is positioned at the beginning
     pdf_buffer.seek(0)
 
-    file_path = "./MyMaps/MyMap.pdf"
+    file_path = str(tmpdir / "MyMap.pdf")
 
-    # Save the PDF to the MyMaps directory
+    # Save the PDF to the temp directory
     with open(file_path, "wb") as f:
         f.write(pdf_buffer.getvalue())
 
@@ -269,20 +273,20 @@ def PDFgen(image_paths):
 #     return png_buffer
 
 
-def Zipgen(image_paths):
+def Zipgen(image_paths, tmpdir):
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
         for path in image_paths:
             zip_file.write(path, os.path.basename(path))
     zip_buffer.seek(0)
 
-    file_path = "./MyMaps/MyMap.zip"
+    file_path = str(tmpdir / "MyMap.zip")
     with open(file_path, "wb") as f:
         f.write(zip_buffer.getvalue())
     return file_path
 
 
-def upscaling(map_file, print_message):
+def upscaling(map_file, print_message, tmpdir):
     map_file_without_extension, _ = os.path.splitext(map_file)
 
     current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -294,9 +298,9 @@ def upscaling(map_file, print_message):
     command = [
         executablefile,
         "-i",
-        f"MyMaps/{map_file}",
+        f"{tmpdir}/{map_file}",
         "-o",
-        f"MyMaps/{map_file}",
+        f"{tmpdir}/{map_file}",
         "-n",
         "realesrgan-x4plus",
     ]

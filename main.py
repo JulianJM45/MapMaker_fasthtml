@@ -66,8 +66,8 @@ async def send_coordinates(request):
                         print(f"Cleanup error: {e}")
 
     if data.get("coordinates_list", []):
-        file_path, file_name = await render_maps(data, ws)
-        return CleanupFileResponse(path=file_path, filename=file_name, cleanup_dir="MyMaps")
+        file_path, file_name, tmpdir = await render_maps(data, ws)
+        return CleanupFileResponse(path=file_path, filename=file_name, cleanup_dir=tmpdir)
     else: await ws("No coordinates provided")
 
 

@@ -13,7 +13,7 @@ ECF = 40075016.686   # Earth's circumference around the equator
 
 myfont = "/python-docker/fonts/DejaVuSansMono.ttf"
 
-def getMap(index, coordinates, MAP_STYLE, ZOOM):
+def getMap(index, coordinates, MAP_STYLE, ZOOM, tmpdir):
     nwLat, nwLon = coordinates['Northwest']
     seLat, seLon = coordinates['SouthEast']
     # nwLon, seLat, seLon, nwLat = coordinates
@@ -42,7 +42,7 @@ def getMap(index, coordinates, MAP_STYLE, ZOOM):
     map_image=label(map_image, s_pixel, index)
     map_image = draw_firepits(map_image, coordinates, s_pixel)
     # map_image.show()
-    map_image.save(f'MyMaps/Map{index + 1}.png')
+    map_image.save(os.path.join(str(tmpdir), f'Map{index + 1}.png'))
 
 
 
