@@ -516,7 +516,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("log").style.zIndex = "1000";
     document.getElementById("configuration-form").style.display = "none";
     // console.log("sending coordinates...");
-    showMessage("Sending coordinates...");
+    // showMessage("Sending coordinates...");
 
     // Iterate through the drawn rectangles and extract their coordinates
     var coordinates_List = [];
