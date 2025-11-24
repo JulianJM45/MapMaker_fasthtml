@@ -2,8 +2,7 @@
 """UI components and page structure for MapMaker FastHTML application"""
 
 from fasthtml.common import *
-from .config import DEFAULT_CONFIG, get_local_script
-import json
+from .config import DEFAULT_CONFIG
 
 # External CSS dependencies
 LEAFLET_CSS = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
