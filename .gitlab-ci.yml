@@ -28,11 +28,14 @@ docker-build:
     - main
     - merge_requests
 
-deploy:
+deploy-prod:
   stage: deploy
   extends: .default
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh-client
   script:
-    - echo "Deploy step placeholder"
-    # Hier kannst du ggf. deinen docker-compose deploy Befehl einfügen
+    - echo "Deploying image to prod server"
+    - ssh -o StrictHostKeyChecking=no prod "cd ~/combined/test_mapmaker && dc down && dc pull && dc up -d"
   only:
     - main
