@@ -27,7 +27,7 @@ jobs:
         env:
           GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
         run: |
-          git remote add gitlab https://gitlab+deploy-token-3:${{ secrets.GITLAB_TOKEN }}@git.commtool.org/schuelerj/MapMaker_fasthtml.git
+          git remote add gitlab https://julian@clami.net:${{ secrets.GITLAB_TOKEN }}@git.commtool.org/schuelerj/MapMaker_fasthtml.git
 
 
       - name: Push branches to GitLab
