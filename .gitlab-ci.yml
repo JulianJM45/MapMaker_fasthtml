@@ -3,7 +3,7 @@ variables:
   # SECRET_PATH: "backend/mapmaker"
 
   # Image name used on the host (change if you want a tag like :main or :<sha>)
-  IMAGE: "registry.git.commtool.org:443/schuelerj/mapmaker_fasthtml:latest"
+  IMAGE: "registry.git.commtool.org:443/schuelerj/mapmaker_fasthtml:base"
 
 include:
   - project: "ci-helpers/backend-nodejs-helpers"
