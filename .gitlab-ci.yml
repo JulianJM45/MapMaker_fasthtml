@@ -1,0 +1,11 @@
+variables:
+  API_NAME: "mapmaker"
+  # SECRET_PATH: "backend/mapmaker"
+
+  # Image name used on the host (change if you want a tag like :main or :<sha>)
+  IMAGE: "registry.git.commtool.org:443/schuelerj/mapmaker_fasthtml:latest"
+
+include:
+  - project: "ci-helpers/backend-nodejs-helpers"
+    ref: dev
+    file: "pipelines.yaml"
