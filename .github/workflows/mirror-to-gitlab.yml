@@ -1,0 +1,49 @@
+name: Mirror to GitLab
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git user
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add GitLab remote
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        run: |
+          # Replace the username if you used a GitLab Deploy Token (e.g. gitlab+deploy-token-123)
+          # If you used a Personal Access Token, use your GitLab username here instead.
+          : "${GITLAB_USERNAME:=gitlab+deploy-token-3}" 
+          # We choose oauth2 for token auth with https; if you used a deploy-token username, override it:
+          # e.g. run: git remote add gitlab https://gitlab+deploy-token-123:${{ secrets.GITLAB_TOKEN }}@git.commtool.org/schuelerj/MapMaker_fasthtml.git
+          if [ "$GITLAB_USERNAME" = "oauth2" ]; then
+            # use oauth2 token entrypoint which many GitLab setups accept
+            git remote add gitlab https://oauth2:${GITLAB_TOKEN}@git.commtool.org/schuelerj/MapMaker_fasthtml.git
+          else
+            git remote add gitlab https://$GITLAB_USERNAME:${GITLAB_TOKEN}@git.commtool.org/schuelerj/MapMaker_fasthtml.git
+          fi
+
+      - name: Push branches to GitLab
+        run: |
+          # push all branches and tags
+          git push --prune gitlab refs/heads/*:refs/heads/*
+
+      - name: Push tags to GitLab
+        run: |
+          git push --tags gitlab
