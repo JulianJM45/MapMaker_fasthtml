@@ -1,11 +1,38 @@
+stages:
+  - build
+  - deploy
+
 variables:
-  API_NAME: "mapmaker"
-  # SECRET_PATH: "backend/mapmaker"
+  IMAGE: "registry.git.commtool.org:443/schuelerj/mapmaker_fasthtml:latest"
+  DOCKER_BUILDKIT: 1
 
-  # Image name used on the host (change if you want a tag like :main or :<sha>)
-  IMAGE: "registry.git.commtool.org:443/schuelerj/mapmaker_fasthtml:base"
+# optional: CI runner tags
+.default:
+  tags:
+    - dockerD
 
-include:
-  - project: "ci-helpers/backend-nodejs-helpers"
-    ref: dev
-    file: "pipelines.yaml"
+docker-build:
+  stage: build
+  extends: .default
+  image: docker:24.0.2 # Docker-in-Docker Image
+  services:
+    - docker:24.0.2-dind
+  script:
+    - echo "Logging into container registry"
+    - echo "$CI_JOB_TOKEN" | docker login $CI_REGISTRY -u gitlab-ci-token --password-stdin
+    - echo "Building image $IMAGE"
+    - docker build -t $IMAGE .
+    - echo "Pushing image $IMAGE"
+    - docker push $IMAGE
+  only:
+    - main
+    - merge_requests
+
+deploy:
+  stage: deploy
+  extends: .default
+  script:
+    - echo "Deploy step placeholder"
+    # Hier kannst du ggf. deinen docker-compose deploy Befehl einfügen
+  only:
+    - main
