@@ -24,7 +24,7 @@ def get():
     page= Head(header()), Body(body()),
     # sse = Div(hx_ext='sse', sse_connect='/send-message', hx_swap="beforeend show:bottom", sse_swap="message",id='log')
     sse = Div(hx_ext='sse', sse_connect='/send-message', hx_swap="beforeend", sse_swap="message",id='log')
-    return Titled("MapMaker2",page, sse)
+    return Titled("MapMaker",page, sse)
 
 
 async def message_generator():

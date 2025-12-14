@@ -20,6 +20,7 @@ async def render_maps(data, ws_send=None):
     # print(str(data))
     # Extract coordinates_list and config
     coordinates_list = data.get("coordinates_list", [])
+    print(coordinates_list)
     config = data.get("config", {})
 
     # Log the extracted data
@@ -36,6 +37,7 @@ async def render_maps(data, ws_send=None):
     upscale = config.get("upscale")
     Overview = config.get("overview")
     PDF = config.get("pdf")
+    SLOPE = config.get("slope", False)
 
     # print("Sending coordinates to Python:", coordinates_list)
     # print("Selected Tile Layer:", MAP_STYLE)
@@ -64,7 +66,7 @@ async def render_maps(data, ws_send=None):
         if ws_send:
             await ws_send(f"Loading Map {index + 1}/{len(coordinates_list)}...")
             await asyncio.sleep(0.01)  # Allow message to be sent
-        getMap(index, coordinates, MAP_STYLE, ZOOM, tmpdir)
+        getMap(index, coordinates, MAP_STYLE, ZOOM, tmpdir, slope=SLOPE)
         # Extract and assign the coordinates to separate variables
 
         if index % 2 == 0:
@@ -80,7 +82,7 @@ async def render_maps(data, ws_send=None):
         if ws_send:
             await ws_send("Cleaning up tiles...")
             await asyncio.sleep(0.01)
-        shutil.rmtree(tiles_dir)
+        # shutil.rmtree(tiles_dir)
 
     # Upscale the images if applicable
     # if upscale:
@@ -189,8 +191,6 @@ def overviewMap(coordinates_list, MAP_STYLE, WIDTH, HEIGHT, tmpdir):
         if max_west is None or nwLon < max_west:
             max_west = nwLon
 
-    # At this point, all max_ variables should be set to float values
-    # Add type assertions to help the type checker
     assert max_north is not None
     assert max_south is not None
     assert max_east is not None

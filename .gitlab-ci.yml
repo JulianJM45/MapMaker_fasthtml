@@ -27,7 +27,6 @@ docker-build:
   only:
     - main
     - merge_requests
-
 # deploy:
 #   stage: deploy
 #   extends: .default
@@ -38,21 +37,21 @@ docker-build:
 #     - main
 
 # Deploy auf Prod
-deploy-prod:
-  stage: deploy
-  extends: .default
-  image: alpine:latest
-  before_script:
-    # SSH-Client installieren
-    - apk add --no-cache openssh-client
-    # SSH-Key aus GitLab Secret hinterlegen
-    - mkdir -p ~/.ssh
-    - echo "$PROD_SSH_KEY" > ~/.ssh/id_rsa
-    - chmod 600 ~/.ssh/id_rsa
-    # Optional: Hostname alias definieren
-    - echo -e "Host prod\n  HostName <PROD_SERVER_IP_OR_DOMAIN>\n  User <SSH_USER>\n  IdentityFile ~/.ssh/id_rsa" > ~/.ssh/config
-  script:
-    - echo "Deploying Docker image on prod server"
-    - ssh -o StrictHostKeyChecking=no prod "cd ~/combined/test_mapmaker && dc down && dc pull && dc up -d"
-  only:
-    - main
+# deploy-prod:
+#   stage: deploy
+#   extends: .default
+#   image: alpine:latest
+#   before_script:
+#     # SSH-Client installieren
+#     - apk add --no-cache openssh-client
+#     # SSH-Key aus GitLab Secret hinterlegen
+#     - mkdir -p ~/.ssh
+#     - echo "$PROD_SSH_KEY" > ~/.ssh/id_rsa
+#     - chmod 600 ~/.ssh/id_rsa
+#     # Optional: Hostname alias definieren
+#     - echo -e "Host prod\n  HostName <PROD_SERVER_IP_OR_DOMAIN>\n  User <SSH_USER>\n  IdentityFile ~/.ssh/id_rsa" > ~/.ssh/config
+#   script:
+#     - echo "Deploying Docker image on prod server"
+#     - ssh -o StrictHostKeyChecking=no prod "cd ~/combined/test_mapmaker && dc down && dc pull && dc up -d"
+#   only:
+#     - main

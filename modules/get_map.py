@@ -11,11 +11,11 @@ ECF = 40075016.686   # Earth's circumference around the equator
 
 # icon_path = 'icons/120px-Firepit.png'
 myfont = os.path.join(os.path.dirname(__file__), "DejaVuSansMono.ttf")
+slope_tiles ="https://tiles.bergfex.at/data/europe-slope-11-15/{z}/{x}/{y}.png"
 
-
-def getMap(index, coordinates, MAP_STYLE, ZOOM, tmpdir):
+def getMap(index, coordinates, MAP_STYLE, ZOOM, tmpdir, slope=False):
     tiles_dir = os.path.join(str(tmpdir), "tiles")
-    # print(f"Using tiles directory: {tiles_dir}")
+    print(f"Using tiles directory: {tiles_dir}")
     nwLat, nwLon = coordinates['Northwest']
     seLat, seLon = coordinates['SouthEast']
     # nwLon, seLat, seLon, nwLat = coordinates
@@ -30,18 +30,32 @@ def getMap(index, coordinates, MAP_STYLE, ZOOM, tmpdir):
     # Download Tiles
     print(f"Downloading Map {index+1} ...")
     download_tiles(x1, x2, y1, y2, ZOOM, MAP_STYLE, tiles_dir)
-    #create output Image
     output_image, tile_size = stitchTiles(x1, x2, y1, y2, ZOOM, tiles_dir)
 
     # Calculate Pixels per Meter
     latitude = math.radians((nwLat + seLat) / 2)
     s_pixel = ECF * math.cos(latitude) / (2.0 ** ZOOM * tile_size)
-    # Calculate Pixel Dimensions
     pix_w = int(WIDTH_METERS / s_pixel)
     pix_h = int(HEIGHT_METERS / s_pixel)
 
     map_image = cropBorders(nwLat, nwLon, lon1, lat1, s_pixel, pix_w, pix_h, output_image)
-    map_image=label(map_image, s_pixel, index)
+
+    if slope:
+        download_tiles(x1, x2, y1, y2, ZOOM, slope_tiles, tiles_dir, slope=True)
+        output_image, tile_size = stitchTiles(x1, x2, y1, y2, ZOOM, tiles_dir, slope=True)
+        s_pixel = ECF * math.cos(latitude) / (2.0 ** ZOOM * 512)
+        pix_w = int(WIDTH_METERS / s_pixel)
+        pix_h = int(HEIGHT_METERS / s_pixel)
+        slope_image = cropBorders(nwLat, nwLon, lon1, lat1, s_pixel, pix_w, pix_h, output_image)
+        # Apply 40% opacity to slope image
+        map_rgba, slope_rgba = map_image.convert('RGBA'), slope_image.convert('RGBA')
+        alpha = slope_rgba.split()[3]
+        alpha = alpha.point(lambda p: int(p * 0.4))
+        slope_rgba.putalpha(alpha)
+        slope_resized = slope_rgba.resize(map_rgba.size, resample=Image.Resampling.LANCZOS)
+        map_image = Image.alpha_composite(map_image.convert('RGBA'), slope_resized)
+
+    map_image=label(map_image, s_pixel, tile_size, index)
     map_image = draw_firepits(map_image, coordinates, s_pixel)
     # map_image.show()
     map_image.save(os.path.join(str(tmpdir), f'Map{index + 1}.png'))
@@ -68,20 +82,21 @@ def widthFromCoordinates(west, east, latitude):
     return ECF*math.cos(math.radians(latitude))*(east-west)/360
 
 
-def label(image, s_pixel, index):
+def label(image, s_pixel, tile_size, index):
     pix1 = int(1000/s_pixel)
+    line_width = int(tile_size/128)
     width, height = image.size
-    ImageDraw.ImageDraw.font = ImageFont.truetype(myfont, 30)
+    ImageDraw.ImageDraw.font = ImageFont.truetype(myfont, int(tile_size/12))
     draw = ImageDraw.Draw(image)
     draw.text((width-10, height-10), f"Map {index+1}", fill=(255, 0, 0), anchor='rs', stroke_width=0)
-    draw.line((10, height-10, 10+pix1, height-10), fill=(0, 0, 0), width=2)
-    draw.line((10, height-15, 10, height-5), fill=(0, 0, 0), width=2)
-    draw.line((10+pix1, height-15, 10+pix1, height-5), fill=(0, 0, 0), width=2)
+    draw.line((10, height-10, 10+pix1, height-10), fill=(0, 0, 0), width=line_width)
+    draw.line((10, height-15, 10, height-5), fill=(0, 0, 0), width=line_width)
+    draw.line((10+pix1, height-15, 10+pix1, height-5), fill=(0, 0, 0), width=line_width)
     draw.text((10+(pix1/2), height-12), "1 km", fill=(0, 0, 0), anchor='ms', stroke_width=0)
     return image
 
 
-def stitchTiles(x1, x2, y1, y2, ZOOM, tiles_dir):
+def stitchTiles(x1, x2, y1, y2, ZOOM, tiles_dir, slope=False):
     # Initialize List for Tile Images
     tile_images = []
 
@@ -89,7 +104,10 @@ def stitchTiles(x1, x2, y1, y2, ZOOM, tiles_dir):
     for y in range(y1, y2 + 1):
         row_images = []
         for x in range(x1, x2 + 1):
-            tile_filename = os.path.join(tiles_dir, f"{ZOOM}_{x}_{y}.png")
+            if slope:
+                tile_filename = os.path.join(tiles_dir, f"slope_tile_{ZOOM}_{x}_{y}.png")
+            else:
+                tile_filename = os.path.join(tiles_dir, f"map_tile_{ZOOM}_{x}_{y}.png")
             tile_image = Image.open(tile_filename)
             row_images.append(tile_image)
         tile_images.append(row_images)
@@ -107,7 +125,7 @@ def stitchTiles(x1, x2, y1, y2, ZOOM, tiles_dir):
             x_offset += tile_image.width
         y_offset += row_images[0].height
 
-    tile_size, _ = Image.open(os.path.join(tiles_dir, f'{ZOOM}_{x1}_{y1}.png')).size
+    tile_size, _ = Image.open(os.path.join(tiles_dir, f'map_tile_{ZOOM}_{x1}_{y1}.png')).size
     # print(f"Tile size: {tile_size}")
 
     return output_image, tile_size
@@ -124,7 +142,7 @@ def cropBorders(northwest_latitude, northwest_longitude, lon1, lat1, s_pixel, pi
     return cropped_image
 
 
-def download_tiles(x1, x2, y1, y2, ZOOM, MAP_STYLE, tiles_dir):
+def download_tiles(x1, x2, y1, y2, ZOOM, MAP_STYLE, tiles_dir, slope=False):
     # Create Directory for Tiles
     if not os.path.exists(tiles_dir):
         os.makedirs(tiles_dir)
@@ -136,7 +154,10 @@ def download_tiles(x1, x2, y1, y2, ZOOM, MAP_STYLE, tiles_dir):
         for y in range(y1, y2 + 1):
             tile_url = MAP_STYLE.format(z=z, x=x, y=y)
             # print(tile_url)
-            tile_filename = os.path.join(tiles_dir, f"{ZOOM}_{x}_{y}.png")
+            if slope:
+                tile_filename = os.path.join(tiles_dir, f"slope_tile_{ZOOM}_{x}_{y}.png")
+            else:
+                tile_filename = os.path.join(tiles_dir, f"map_tile_{ZOOM}_{x}_{y}.png")
             if not os.path.exists(tile_filename):
                 for attempt in range(3):  # Try up to 3 times
                     try:
@@ -150,24 +171,7 @@ def download_tiles(x1, x2, y1, y2, ZOOM, MAP_STYLE, tiles_dir):
                     except Exception as e:
                         print(f"Error downloading {tile_url}: {e}")
                     time.sleep(1)  # Wait 1 second before retrying
-
     print("Tiles Downloaded")
-
-    # for x in range(x1, x2 + 1):
-    #     for y in range(y1, y2 + 1):
-    #         # print(f"Downloading tile {y}")
-    #         # tile_url = f"https://{MAP_STYLE}/{ZOOM}/{x}/{y}.png"
-    #         # if MAP_STYLE == 'tile.tracestrack.com/topo__/{z}/{x}/{y}.png?key=APIKEY':
-    #         #     tile_url = f"https://tile.tracestrack.com/topo__/{ZOOM}/{x}/{y}.png?key=0cf0393c74ee7d4cd976c5cd9f891d60"
-    #         tile_url = MAP_STYLE.format(z=z, x=x, y=y)
-    #         print(tile_url)
-    #         tile_filename = f"tiles/{z}_{x}_{y}.png"
-    #         if not os.path.exists(tile_filename):
-    #             #print(f"Getting {x},{y}")
-    #             response = requests.get(tile_url)
-    #             if response.status_code == 200:
-    #                 with open(tile_filename, 'wb') as f:
-    #                     f.write(response.content)
 
 
 # Calculate Tile Coordinates

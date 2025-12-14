@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
   var map = L.map("map").setView([49.326662, 8.194021], 7);
-  // var map = L.map("map").setView([49.326662, 8.194021], 13);
+  // var map = L.map("map").setView([47.429444, 11.0475], 13);
 
   var openStreetMapLayer = L.tileLayer(
     "https://a.tile.openstreetmap.de/{z}/{x}/{y}.png",
@@ -42,6 +42,23 @@ document.addEventListener("DOMContentLoaded", function () {
         'a href="https://api.mapy.com/copyright" target="_blank">&copy; Seznam.cz a.s. a další</a>',
     },
   );
+  var bergfexLayer = L.tileLayer(
+    "https://tiles.bergfex.at/styles/bergfex-osm/{z}/{x}/{y}.jpg",
+    {
+      name: "tiles.bergfex.at/styles/bergfex-osm",
+      attribution:
+        '&copy; <a href="https://www.bergfex.at">Bergfex</a> contributors',
+    },
+  );
+  var bergfexSlopeLayer = L.tileLayer(
+    "https://tiles.bergfex.at/data/europe-slope-11-15/{z}/{x}/{y}.png",
+    {
+      name: "tiles.bergfex.at/data/europe-slope-11-15",
+      attribution:
+        '&copy; <a href="https://www.bergfex.at">Bergfex</a> contributors',
+      opacity: 0.4,
+    },
+  );
 
   // Add default layer
   openStreetMapLayer.addTo(map);
@@ -53,8 +70,14 @@ document.addEventListener("DOMContentLoaded", function () {
     Outdooractive: outdooractiveLayer,
     Tracestrack: tracesTrackLayer,
     Mapy: mapyLayer,
+    Bergfex: bergfexLayer,
   };
-  L.control.layers(baseMaps).addTo(map);
+
+  var overlayMaps = {
+    "Slope Overlay": bergfexSlopeLayer,
+  };
+
+  L.control.layers(baseMaps, overlayMaps).addTo(map);
 
   // Track layer changes
   var layer_name = "a.tile.openstreetmap.de";
@@ -62,6 +85,65 @@ document.addEventListener("DOMContentLoaded", function () {
   map.on("baselayerchange", function (e) {
     layer_name = e.layer.options.name;
     console.log("Layer changed to:", layer_name);
+  });
+
+  // Create slope legend control
+  var SlopeLegend = L.Control.extend({
+    options: {
+      position: "bottomleft",
+    },
+
+    onAdd: function (map) {
+      var container = L.DomUtil.create(
+        "div",
+        "slope-legend leaflet-bar leaflet-control",
+      );
+      container.style.backgroundColor = "rgba(255, 255, 255, 0.9)";
+      container.style.padding = "6px 8px";
+      container.style.fontSize = "11px";
+      container.style.lineHeight = "18px";
+      container.style.display = "none"; // Hidden by default
+
+      // Build the legend HTML
+      var html = '<div style="display: flex; gap: 2px;">';
+
+      var slopeRanges = [
+        { angle: "30°", color: "rgba(255, 255, 0, 0.6)" },
+        { angle: "35°", color: "rgba(255, 165, 0, 0.6)" },
+        { angle: "40°", color: "rgba(255, 0, 0, 0.6)" },
+        { angle: "45°", color: "rgba(128, 0, 128, 0.6)" },
+      ];
+
+      slopeRanges.forEach(function (range) {
+        html +=
+          '<div style="width: 32px; height: 20px; background-color: ' +
+          range.color +
+          '; border: 1px solid #000; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 10px;">' +
+          range.angle +
+          "</div>";
+      });
+
+      html += "</div>";
+      container.innerHTML = html;
+
+      return container;
+    },
+  });
+
+  var slopeLegend = new SlopeLegend();
+  slopeLegend.addTo(map);
+
+  // Show/hide slope legend when slope overlay is toggled
+  map.on("overlayadd", function (e) {
+    if (e.name === "Slope Overlay") {
+      slopeLegend.getContainer().style.display = "block";
+    }
+  });
+
+  map.on("overlayremove", function (e) {
+    if (e.name === "Slope Overlay") {
+      slopeLegend.getContainer().style.display = "none";
+    }
   });
 
   // #2 log output
@@ -535,15 +617,22 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
 
-    // Get the currently selected tile layer
+    // Get the currently selected tile layer (exclude overlay layers like slope)
     var selectedTileLayer = null;
+    var slopeLayerActive = false;
 
     // Iterate through all tile layers added to the map
     map.eachLayer(function (layer) {
       if (layer instanceof L.TileLayer && map.hasLayer(layer)) {
         // Check if the layer is an instance of L.TileLayer and is currently active
         if (layer.options && layer.options.name) {
-          selectedTileLayer = layer._url;
+          // Check if this is the slope overlay layer
+          if (layer.options.opacity === 0.4) {
+            slopeLayerActive = true;
+          } else {
+            // This is a base layer
+            selectedTileLayer = layer._url;
+          }
         }
       }
     });
@@ -561,6 +650,7 @@ document.addEventListener("DOMContentLoaded", function () {
         upscale: config.upscale,
         overview: config.overview,
         pdf: config.pdf,
+        slope: slopeLayerActive,
       },
     };
 

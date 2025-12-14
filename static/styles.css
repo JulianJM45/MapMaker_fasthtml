@@ -14,7 +14,7 @@ Fullscreen map container */
 #gpxButton {
     position: absolute;
     right: 10px;
-    top: 130px;
+    top: 180px;
     width: 80px;
     z-index: 800;
     background-color: #f4f4f4;
@@ -32,7 +32,7 @@ Fullscreen map container */
 }
 
 #download-button {
-    top: 170px;
+    top: 220px;
 }
 
 #gpxButton {
@@ -43,7 +43,7 @@ Fullscreen map container */
 
 #configuration-form {
     position: absolute;
-    top: 170px;
+    top: 210px;
     right: 10px;
     background-color: rgba(249, 249, 249, 0.9);
     padding: 10px;
