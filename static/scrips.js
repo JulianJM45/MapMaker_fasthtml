@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-  var map = L.map("map").setView([49.326662, 8.194021], 7);
+  var map = L.map("map").setView([48.149972, 11.590917], 7);
   // var map = L.map("map").setView([47.429444, 11.0475], 13);
 
   var openStreetMapLayer = L.tileLayer(
