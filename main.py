@@ -1,30 +1,37 @@
+import asyncio
 import os
 import shutil
-import asyncio
-import random
+
+# import random
 # from asyncio import sleep
-
 from fasthtml.common import *
-
 from starlette.responses import FileResponse
-from modules.ui import header, body
+
 from modules.renderMaps import render_maps
+from modules.ui import body, header
 
-
-hdrs=(Script(src="https://unpkg.com/htmx-ext-sse@2.2.1/sse.js"),)
-app,rt = fast_app(hdrs=hdrs, pico=False)
+hdrs = (Script(src="https://unpkg.com/htmx-ext-sse@2.2.1/sse.js"),)
+app, rt = fast_app(hdrs=hdrs, pico=False)
 
 message_queue = asyncio.Queue()
 shutdown_event = signal_shutdown()
 
 
-
-@rt('/')
+@rt("/")
 def get():
-    page= Head(header()), Body(body()),
+    page = (
+        Head(header()),
+        Body(body()),
+    )
     # sse = Div(hx_ext='sse', sse_connect='/send-message', hx_swap="beforeend show:bottom", sse_swap="message",id='log')
-    sse = Div(hx_ext='sse', sse_connect='/send-message', hx_swap="beforeend", sse_swap="message",id='log')
-    return Titled("MapMaker",page, sse)
+    sse = Div(
+        hx_ext="sse",
+        sse_connect="/send-message",
+        hx_swap="beforeend",
+        sse_swap="message",
+        id="log",
+    )
+    return Titled("MapMaker", page, sse)
 
 
 async def message_generator():
@@ -40,15 +47,17 @@ async def message_generator():
             print(f"SSE error: {e}")
             break
 
+
 @rt("/send-message")
 async def get():
     return EventStream(message_generator())
+
 
 async def send_msg(msg: str):
     await message_queue.put(msg)
 
 
-@rt('/send_coordinates', methods=['POST'])
+@rt("/send_coordinates", methods=["POST"])
 async def send_coordinates(request):
     data = await request.json()
 
@@ -74,11 +83,12 @@ async def send_coordinates(request):
 
     if data.get("coordinates_list", []):
         file_path, file_name, tmpdir = await render_maps(data, send_msg)
-        return CleanupFileResponse(path=file_path, filename=file_name, cleanup_dir=tmpdir)
+        return CleanupFileResponse(
+            path=file_path, filename=file_name, cleanup_dir=tmpdir
+        )
     else:
         await send_msg("No coordinates provided")
         return {"message": "No coordinates provided"}
-
 
 
 serve()
