@@ -1,15 +1,18 @@
-import os
-import tempfile
-from pathlib import Path
-import subprocess
-import zipfile
-import io
-import shutil
-import re
-import img2pdf
 import asyncio
+import io
+import os
+import re
+
+# import shutil
+import subprocess
+import tempfile
+import zipfile
+from pathlib import Path
+
+import img2pdf
 
 from .get_map import *
+
 # from utils import send_message
 
 
@@ -31,36 +34,28 @@ async def render_maps(data, ws_send=None):
     MAP_STYLE = config.get("tileLayer")
     WIDTH = int(config.get("width"))
     HEIGHT = int(config.get("height"))
-    SCALE = int(config.get("scale"))
+    # SCALE = int(config.get("scale"))
     ZOOM = int(config.get("zoom"))
-    AutoZoom = config.get("autoZoom")
-    upscale = config.get("upscale")
+    # AutoZoom = config.get("autoZoom")
+    # upscale = config.get("upscale")
     Overview = config.get("overview")
     PDF = config.get("pdf")
     SLOPE = config.get("slope", False)
 
-    # print("Sending coordinates to Python:", coordinates_list)
-    # print("Selected Tile Layer:", MAP_STYLE)
-    # if upscale: print("upscaling")
-    # else: print ("no upscaling")
-    # max_distance=max(WIDTH, HEIGHT)
-    # if AutoZoom: ZOOM = getZoom(max_distance *SCALE/1000)
-    # print (ZOOM)
-
     tmpdir = Path(tempfile.mkdtemp(prefix="mymaps_"))
-    # if not os.path.exists("MyMaps"):
-    #     os.makedirs("MyMaps")
     odd_maps = []
     even_maps = []
 
-    if len(coordinates_list) > 1:
+    if len(coordinates_list) > 2:
         Overview = True
 
     if Overview:
         if ws_send:
             await ws_send("Loading Overview Map...")
             await asyncio.sleep(0.01)  # Allow message to be sent
-        overviewImage, ovmc = overviewMap(coordinates_list, MAP_STYLE, WIDTH, HEIGHT, tmpdir)
+        overviewImage, ovmc = overviewMap(
+            coordinates_list, MAP_STYLE, WIDTH, HEIGHT, tmpdir
+        )
 
     for index, coordinates in enumerate(coordinates_list):
         if ws_send:
@@ -138,8 +133,8 @@ def drawMapInOverview(overviewImage, ovmc, coordinates, index):
     draw = ImageDraw.Draw(transparent_layer)
     fill_color = (0, 100, 255, 30)  # Blue with 50% transparency (RGBA)
     outline_color = (24, 116, 205, 200)  # Blue without transparency (RGB)
-    nwLat, nwLon = coordinates['Northwest']
-    seLat, seLon = coordinates['SouthEast']
+    nwLat, nwLon = coordinates["Northwest"]
+    seLat, seLon = coordinates["SouthEast"]
     # nwLon, seLat, seLon, nwLat = coordinates
     x1 = width * (abs(nwLon - ovmc[1]) / abs(ovmc[1] - ovmc[3]))
     y1 = height * (abs(nwLat - ovmc[0]) / abs(ovmc[0] - ovmc[2]))
@@ -178,8 +173,8 @@ def overviewMap(coordinates_list, MAP_STYLE, WIDTH, HEIGHT, tmpdir):
     max_north = max_south = max_east = max_west = None
 
     for coordinates in coordinates_list:
-        nwLat, nwLon = coordinates['Northwest']
-        seLat, seLon = coordinates['SouthEast']
+        nwLat, nwLon = coordinates["Northwest"]
+        seLat, seLon = coordinates["SouthEast"]
         # nwLon, seLat, seLon, nwLat = coordinates
 
         if max_north is None or nwLat > max_north:
@@ -220,10 +215,6 @@ def overviewMap(coordinates_list, MAP_STYLE, WIDTH, HEIGHT, tmpdir):
         max_west = longitude - 360 * (WIDTH_METERS / 2) / (
             ECF * math.cos(math.radians(latitude))
         )
-    # Calculate Pixel Dimensions
-    # s_pixel = ECF * math.cos(math.radians(latitude)) / 2.0 ** (ZOOM + 8.0)
-    # pix_w = int(width / s_pixel)
-    # pix_h = int(height / s_pixel)
     # Calculate tiles
     x1, y1 = deg2num(max_north, max_west, ZOOM)
     x2, y2 = deg2num(max_south, max_east, ZOOM)
@@ -240,9 +231,7 @@ def overviewMap(coordinates_list, MAP_STYLE, WIDTH, HEIGHT, tmpdir):
     # create output Image
     overviewImage, tile_size = stitchTiles(x1, x2, y1, y2, ZOOM, tiles_dir)
 
-    # Calculate Pixels per Meter
     s_pixel = ECF * math.cos(math.radians(latitude)) / (2.0**ZOOM * tile_size)
-    # Calculate Pixel Dimensions
     pix_w = int(WIDTH_METERS / s_pixel)
     pix_h = int(HEIGHT_METERS / s_pixel)
 
@@ -273,16 +262,6 @@ def PDFgen(image_paths, tmpdir):
         f.write(pdf_buffer.getvalue())
 
     return file_path
-
-
-# def PNGgen(image_paths):
-#     # Open the first image
-#     image = Image.open(image_paths[0])
-#     # Create a new image with the same size and mode
-#     png_buffer = io.BytesIO()
-#     image.save(png_buffer, format='PNG')
-#     png_buffer.seek(0)
-#     return png_buffer
 
 
 def Zipgen(image_paths, tmpdir):

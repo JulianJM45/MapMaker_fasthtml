@@ -2,8 +2,6 @@ import asyncio
 import os
 import shutil
 
-# import random
-# from asyncio import sleep
 from fasthtml.common import *
 from starlette.responses import FileResponse
 
@@ -23,7 +21,6 @@ def get():
         Head(header()),
         Body(body()),
     )
-    # sse = Div(hx_ext='sse', sse_connect='/send-message', hx_swap="beforeend show:bottom", sse_swap="message",id='log')
     sse = Div(
         hx_ext="sse",
         sse_connect="/send-message",
@@ -41,7 +38,6 @@ async def message_generator():
             message = await asyncio.wait_for(message_queue.get(), timeout=1.0)
             yield sse_message(Div(message))
         except asyncio.TimeoutError:
-            # Send keepalive to prevent connection timeout
             continue
         except Exception as e:
             print(f"SSE error: {e}")
@@ -49,7 +45,7 @@ async def message_generator():
 
 
 @rt("/send-message")
-async def get():
+async def get_see():
     return EventStream(message_generator())
 
 

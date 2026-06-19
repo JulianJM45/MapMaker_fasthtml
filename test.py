@@ -1,5 +1,6 @@
 # %%
 import asyncio
+
 from modules.renderMaps import render_maps
 
 tile_url = [
@@ -27,19 +28,38 @@ tile_url = [
 #         "pdf": True,
 #     },
 # }
-coordinates_list = [{'Northwest': [47.45952049176028, 10.98186175105808], 'SouthEast': [47.41430438011742, 11.077483494303252]}]
-data = {'coordinates_list': coordinates_list,
-    'config': {'tileLayer': tile_url[5], 'width': 288, 'height': 201, 'scale': 25000, 'zoom': 14, 'autoZoom': True, 'pdf': True}}
+# coordinates_list = [{'Northwest': [47.45952049176028, 10.98186175105808], 'SouthEast': [47.41430438011742, 11.077483494303252]}]
+coordinates_list = [
+    {
+        "Northwest": [49.29878484646142, 7.8759940704995755],
+        "SouthEast": [49.253568734818565, 7.975131646663512],
+    }
+]
+
+data = {
+    "coordinates_list": coordinates_list,
+    "config": {
+        "tileLayer": tile_url[4],
+        "width": 288,
+        "height": 201,
+        "scale": 25000,
+        "zoom": 15,
+        "autoZoom": False,
+        "pdf": False,
+    },
+}
 
 
 # file_path, file_name = render_maps(data)
 async def ws(msg):
     print(msg)
 
+
 async def test_render_maps():
     file_path, file_name, tmpdir = await render_maps(data, ws)
     print(f"Generated: {file_name} at {file_path}")
     print(f"Temp directory: {tmpdir}")
+
 
 # Run the async function
 asyncio.run(test_render_maps())
