@@ -98,14 +98,6 @@ document.addEventListener("DOMContentLoaded", function () {
         "div",
         "slope-legend leaflet-bar leaflet-control",
       );
-      container.style.backgroundColor = "rgba(255, 255, 255, 0.9)";
-      container.style.padding = "6px 8px";
-      container.style.fontSize = "11px";
-      container.style.lineHeight = "18px";
-      container.style.display = "none"; // Hidden by default
-
-      // Build the legend HTML
-      var html = '<div style="display: flex; gap: 2px;">';
 
       var slopeRanges = [
         { angle: "30°", color: "rgba(255, 255, 0, 0.6)" },
@@ -114,11 +106,14 @@ document.addEventListener("DOMContentLoaded", function () {
         { angle: "45°", color: "rgba(128, 0, 128, 0.6)" },
       ];
 
+      // Build the legend HTML
+      var html = '<div style="display: flex; gap: 2px;">';
+
       slopeRanges.forEach(function (range) {
         html +=
-          '<div style="width: 32px; height: 20px; background-color: ' +
+          '<div class="slope-legend-item" style="background-color: ' +
           range.color +
-          '; border: 1px solid #000; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 10px;">' +
+          '">' +
           range.angle +
           "</div>";
       });

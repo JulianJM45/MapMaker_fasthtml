@@ -13,28 +13,13 @@ tile_url = [
 ]
 
 
-# data = {'coordinates_list': [[8.06821152449175, 49.33914199655545, 8.167521507734817, 49.384358108198306]], 'config': {'tileLayer': 'a.tile.openstreetmap.de', 'width': 288, 'height': 201, 'scale': 25000, 'zoom': 14, 'autoZoom': True, 'upscale': False, 'overview': False, 'pdf': False}}
-# data = {
-#     "coordinates_list": [coordinate_example],
-#     "config": {
-#         "tileLayer": tile_url[0],
-#         "width": 288,
-#         "height": 201,
-#         "scale": 25000,
-#         "zoom": 14,
-#         "autoZoom": False,
-#         "upscale": False,
-#         "overview": False,
-#         "pdf": True,
-#     },
-# }
-# coordinates_list = [{'Northwest': [47.45952049176028, 10.98186175105808], 'SouthEast': [47.41430438011742, 11.077483494303252]}]
 coordinates_list = [
     {
         "Northwest": [49.29878484646142, 7.8759940704995755],
         "SouthEast": [49.253568734818565, 7.975131646663512],
     }
 ]
+
 
 data = {
     "coordinates_list": coordinates_list,

@@ -64,7 +64,10 @@ def getMap(index, coordinates, MAP_STYLE, ZOOM, tmpdir, slope=False):
         map_image = Image.alpha_composite(map_image.convert("RGBA"), slope_resized)
 
     map_image = label(map_image, s_pixel, tile_size, index)
-    map_image = draw_firepits(map_image, coordinates, s_pixel)
+    map_image = draw_icons(map_image, coordinates, tile_size, symbol="firepit")
+    if "mapy" in MAP_STYLE:
+        map_image = draw_icons(map_image, coordinates, tile_size, symbol="spring")
+
     # map_image.show()
     map_image.save(os.path.join(str(tmpdir), f"Map{index + 1}.png"))
 
@@ -75,6 +78,15 @@ def getMetersFromCoordinates(north, south, east, west):
     )
     heightMeters = (north - south) * POL_CF / 360
     return [widthMeters, heightMeters]
+
+
+def calculateAutoZoom(coordinates):
+    nwLat, nwLon = coordinates["Northwest"]
+    seLat, seLon = coordinates["SouthEast"]
+
+    widthMeters, heightMeters = getMetersFromCoordinates(nwLat, seLat, seLon, nwLon)
+    max_distance = max(widthMeters, heightMeters)
+    return getZoom(max_distance)
 
 
 def getZoom(max_distance):
@@ -241,68 +253,70 @@ def num2deg(x, y, ZOOM):
     return lat, lon
 
 
-def draw_firepits(image, coordinates, s_pixel):
-    nwLat, nwLon = coordinates["Northwest"]
-    seLat, seLon = coordinates["SouthEast"]
-    # nwLon, seLat, seLon, nwLat = coordinates
+def draw_icons(image, coordinates, tile_size, symbol="firepit"):
+    positions = []
+    icons = get_icons(coordinates, symbol)
 
-    try:
-        positions = []
-        firepits = get_firepits(nwLat, nwLon, seLat, seLon)
+    for icon in icons:
+        x, y = get_xy(icon[0], icon[1], coordinates, image.width, image.height)
+        positions.append((x, y))
 
-        if not firepits:
-            print("No firepits found or API failed, skipping firepit overlay")
-            return image
+    current_dir = os.path.dirname(os.path.realpath(__file__))
+    parent_dir = os.path.dirname(current_dir)
+    if symbol == "firepit":
+        icon_filename = "120px-Firepit.png"
+    elif symbol == "spring":
+        icon_filename = "spring.png"
+    else:
+        raise ValueError(f"No icon file_name for {symbol}")
+    icon_path = os.path.join(parent_dir, f"icons/{icon_filename}")
 
-        for firepit in firepits:
-            # x_meters, y_meters = getMetersFromCoordinates(nwLat, firepit[0], firepit[1], nwLon)
-            # x, y = int(x_meters / s_pixel), int(y_meters / s_pixel)
-            x, y = get_xy(
-                firepit[0], firepit[1], coordinates, image.width, image.height
-            )
-            positions.append((x, y))
+    icon = Image.open(icon_path)
+    imagesize = int(tile_size / 13)
+    icon = icon.resize((imagesize, imagesize))
 
-        current_dir = os.path.dirname(os.path.realpath(__file__))
-        parent_dir = os.path.dirname(current_dir)
-        icon_path = os.path.join(parent_dir, "icons/120px-Firepit.png")
+    for position in positions:
+        x, y = position
+        position = (
+            int(x - icon.width / 2),
+            int(y - icon.height / 2),
+        )
+        image.paste(icon, position, icon)
 
-        if not os.path.exists(icon_path):
-            print(f"Firepit icon not found at {icon_path}, skipping firepit overlay")
-            return image
-
-        icon = Image.open(icon_path)
-        icon = icon.resize((20, 20))
-    except Exception as e:
-        print(f"Error in draw_firepits: {e}")
-        print("Continuing without firepit overlay")
-        return image
-
-    image = overlay_image(image, icon, positions)
     icon.close()
     return image
 
 
-def overlay_image(image, icon, positions):
-    for position in positions:
-        image.paste(icon, position, icon)
-    return image
+def get_icons(coordinates, symbol="firepit"):
+    nwLat, nwLon = coordinates["Northwest"]
+    seLat, seLon = coordinates["SouthEast"]
 
-
-def get_firepits(nwLat, nwLon, seLat, seLon):
     overpass_url = "http://overpass-api.de/api/interpreter"
+    if symbol == "firepit":
+        node_filter = '"leisure"="firepit"'
+    elif symbol == "spring":
+        node_filter = '"natural"="spring"'
+    else:
+        raise ValueError(f"Unsupported symbol: {symbol}")
     overpass_query = f"""
     [out:json];
     (
-        node["leisure"="firepit"]({seLat},{nwLon},{nwLat},{seLon});
+        node[{node_filter}]({seLat},{nwLon},{nwLat},{seLon});
     );
     out center;
     """
-
     try:
+        # response = requests.get(
+        #     overpass_url, params={"data": overpass_query}, timeout=10
+        # )
         response = requests.get(
-            overpass_url, params={"data": overpass_query}, timeout=10
+            overpass_url,
+            params={"data": overpass_query},
+            headers={"User-Agent": "MapMaker"},
+            timeout=10,
         )
-        print(f"Overpass API response status: {response.status_code}")
+
+        # print(f"Overpass API response status: {response.status_code}")
 
         if response.status_code != 200:
             print(
@@ -315,24 +329,22 @@ def get_firepits(nwLat, nwLon, seLat, seLon):
             return []
 
         data = response.json()
-        print(f"Overpass API returned {len(data.get('elements', []))} firepit elements")
+        print(
+            f"Overpass API returned {len(data.get('elements', []))} {symbol} elements"
+        )
 
     except requests.exceptions.RequestException as e:
         print(f"Error making request to Overpass API: {e}")
         return []
-    except ValueError as e:
-        print(f"Error parsing JSON response from Overpass API: {e}")
-        print(f"Response text: {response.text[:500]}")  # First 500 chars for debugging
-        return []
 
-    firepits = []
+    icons = []
     for element in data.get("elements", []):
         if "lat" in element and "lon" in element:
-            firepits.append((element["lat"], element["lon"]))
+            icons.append((element["lat"], element["lon"]))
         elif "center" in element:
-            firepits.append((element["center"]["lat"], element["center"]["lon"]))
+            icons.append((element["center"]["lat"], element["center"]["lon"]))
 
-    return firepits
+    return icons
 
 
 def get_xy(lat, lon, coordinates, pix_w, pix_h):

@@ -142,3 +142,27 @@ Fullscreen map container */
 .log-error {
     color: #f44336;
 }
+
+.slope-legend {
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 6px 8px;
+    font-size: 11px;
+    line-height: 18px;
+    display: none; /* Hidden by default */
+}
+
+.slope-legend-container {
+    display: flex;
+    gap: 2px;
+}
+
+.slope-legend-item {
+    width: 32px;
+    height: 20px;
+    border: 1px solid #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 10px;
+}

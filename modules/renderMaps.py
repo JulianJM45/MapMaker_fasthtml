@@ -2,8 +2,6 @@ import asyncio
 import io
 import os
 import re
-
-# import shutil
 import subprocess
 import tempfile
 import zipfile
@@ -12,8 +10,6 @@ from pathlib import Path
 import img2pdf
 
 from .get_map import *
-
-# from utils import send_message
 
 
 async def render_maps(data, ws_send=None):
@@ -36,7 +32,9 @@ async def render_maps(data, ws_send=None):
     HEIGHT = int(config.get("height"))
     # SCALE = int(config.get("scale"))
     ZOOM = int(config.get("zoom"))
-    # AutoZoom = config.get("autoZoom")
+    AutoZoom = config.get("autoZoom")
+    if AutoZoom:
+        ZOOM = calculateAutoZoom(coordinates_list[0])
     # upscale = config.get("upscale")
     Overview = config.get("overview")
     PDF = config.get("pdf")
@@ -116,9 +114,6 @@ async def render_maps(data, ws_send=None):
         # print('png finished :)')
 
     file_name = file_path.split("/")[-1]
-
-    # if os.path.exists("MyMaps"):
-    #     shutil.rmtree("MyMaps")
 
     if ws_send:
         await ws_send("Maps ready! Starting download...")
