@@ -1,3 +1,61 @@
+// ====== CONSTANTS & CONFIGURATION ======
+const GEO_CONSTANTS = {
+  POL_CF: 40007863,
+  ECF: 40075016.686,
+};
+const slopeRanges = [
+  { angle: "30°", color: "rgba(255, 255, 0, 0.6)" },
+  { angle: "35°", color: "rgba(255, 165, 0, 0.6)" },
+  { angle: "40°", color: "rgba(255, 0, 0, 0.6)" },
+  { angle: "45°", color: "rgba(128, 0, 128, 0.6)" },
+];
+
+// ====== UTILITY FUNCTIONS ======
+function addEventListeners(elementConfigs) {
+  elementConfigs.forEach(({ id, event, handler }) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.addEventListener(event, handler);
+    }
+  });
+}
+
+// ====== CLASSES ======
+class ToggleButton {
+  constructor(leftId, rightId, btnId, defaultLeft = true) {
+    this.left = document.getElementById(leftId);
+    this.right = document.getElementById(rightId);
+    this.btn = document.getElementById(btnId);
+    this.default = defaultLeft;
+    // Set initial position based on defaultLeft
+    if (this.btn) {
+      this.btn.style.left = defaultLeft ? "0%" : "50%";
+      this.btn.style.display = "block";
+    }
+  }
+
+  setLeft(callback) {
+    if (this.left && this.right && this.btn) {
+      this.left.addEventListener("click", () => {
+        this.btn.style.left = "0%";
+        this.isLeft = true;
+        callback(true);
+      });
+    }
+  }
+
+  setRight(callback) {
+    if (this.left && this.right && this.btn) {
+      this.right.addEventListener("click", () => {
+        this.btn.style.left = "50%";
+        this.isLeft = false;
+        callback(false);
+      });
+    }
+  }
+}
+
+// ====== MAIN INITIALIZATION ======
 document.addEventListener("DOMContentLoaded", function () {
   var map = L.map("map").setView([48.149972, 11.590917], 7);
   // var map = L.map("map").setView([47.429444, 11.0475], 13);
@@ -66,10 +124,10 @@ document.addEventListener("DOMContentLoaded", function () {
   // Create a layer control and add it to the map
   var baseMaps = {
     OpenStreetMap: openStreetMapLayer,
+    "⭐ Mapy": mapyLayer,
     OpenTopoMap: openTopoMapLayer,
     Outdooractive: outdooractiveLayer,
     Tracestrack: tracesTrackLayer,
-    Mapy: mapyLayer,
     Bergfex: bergfexLayer,
   };
 
@@ -98,13 +156,6 @@ document.addEventListener("DOMContentLoaded", function () {
         "div",
         "slope-legend leaflet-bar leaflet-control",
       );
-
-      var slopeRanges = [
-        { angle: "30°", color: "rgba(255, 255, 0, 0.6)" },
-        { angle: "35°", color: "rgba(255, 165, 0, 0.6)" },
-        { angle: "40°", color: "rgba(255, 0, 0, 0.6)" },
-        { angle: "45°", color: "rgba(128, 0, 128, 0.6)" },
-      ];
 
       // Build the legend HTML
       var html = '<div style="display: flex; gap: 2px;">';
@@ -187,26 +238,21 @@ document.addEventListener("DOMContentLoaded", function () {
   map.addControl(drawControl);
 
   // load GPX track
-  // Get the button and file input elements
-  var gpxButton = document.getElementById("gpxButton");
   var gpxFileInput = document.getElementById("gpxFileInput");
 
-  // Add an event listener for the 'click' event to the button
-  gpxButton.addEventListener("click", function () {
-    // Trigger the file input's click event
-    gpxFileInput.click();
-  });
+  addEventListeners([
+    {
+      id: "gpxButton",
+      event: "click",
+      handler: () => gpxFileInput.click(),
+    },
+  ]);
 
-  // Add an event listener for the 'change' event to the file input
   gpxFileInput.addEventListener("change", function (e) {
     var file = e.target.files[0];
     var reader = new FileReader();
-
-    // Add an event listener for the 'load' event
     reader.addEventListener("load", function (e) {
       var gpxData = e.target.result;
-
-      // Load the GPX data into the map
       new L.GPX(gpxData, { async: true })
         .on("loaded", function (e) {
           map.fitBounds(e.target.getBounds());
@@ -349,105 +395,46 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     });
   }
-
-  // Toggle button event listeners with better error handling
+  // Toggle button event listeners
   function initializeToggleButtons() {
-    // Wait for elements to be available, even if hidden
-    setTimeout(function () {
-      const leftButton = document.getElementById("leftButton");
-      const rightButton = document.getElementById("rightButton");
-      const btn = document.getElementById("btn");
-
-      // Orientation toggle elements
-      const portraitButton = document.getElementById("portraitButton");
-      const landscapeButton = document.getElementById("landscapeButton");
-      const orientationBtn = document.getElementById("orientationBtn");
-
-      if (leftButton && rightButton && btn) {
-        // Remove any existing listeners first
-        leftButton.removeEventListener("click", leftClick);
-        rightButton.removeEventListener("click", rightClick);
-
-        // Add new listeners
-        leftButton.addEventListener("click", leftClick);
-        rightButton.addEventListener("click", rightClick);
-
-        // Set initial state (PDF default)
-        btn.style.left = "50%";
+    setTimeout(() => {
+      // PDF/PNG toggle (left=PNG, right=PDF)
+      const pdfToggle = new ToggleButton(
+        "leftButton",
+        "rightButton",
+        "btn",
+        false,
+      );
+      pdfToggle.setLeft(() => {
+        console.log("Left button clicked - PNG mode");
+        config.pdf = false;
+      });
+      pdfToggle.setRight(() => {
+        console.log("Right button clicked - PDF mode");
         config.pdf = true;
+      });
 
-        // Ensure button is visible
-        btn.style.display = "block";
-      } else {
-        console.error("Toggle button elements not found after delay");
-      }
-
-      // Initialize orientation toggle
-      if (portraitButton && landscapeButton && orientationBtn) {
-        // Remove any existing listeners first
-        portraitButton.removeEventListener("click", portraitClick);
-        landscapeButton.removeEventListener("click", landscapeClick);
-
-        // Add new listeners
-        portraitButton.addEventListener("click", portraitClick);
-        landscapeButton.addEventListener("click", landscapeClick);
-
-        // Set initial state (landscape default)
-        orientationBtn.style.left = "50%";
+      // Portrait/Landscape toggle (left=portrait, right=landscape)
+      const orientationToggle = new ToggleButton(
+        "portraitButton",
+        "landscapeButton",
+        "orientationBtn",
+        false,
+      );
+      orientationToggle.setLeft(() => {
+        console.log("Portrait clicked");
+        config.orientation = "portrait";
+      });
+      orientationToggle.setRight(() => {
+        console.log("Landscape clicked");
         config.orientation = "landscape";
-
-        // Ensure button is visible
-        orientationBtn.style.display = "block";
-      }
+      });
     }, 100);
   }
-
-  // Define click functions outside of initialization
-  function leftClick() {
-    console.log("Left button clicked - PNG mode");
-    const btn = document.getElementById("btn");
-    if (btn) {
-      btn.style.left = "0%";
-      config.pdf = false;
-    }
-  }
-
-  function rightClick() {
-    console.log("Right button clicked - PDF mode");
-    const btn = document.getElementById("btn");
-    if (btn) {
-      btn.style.left = "50%";
-      config.pdf = true;
-    }
-  }
-
-  // Define orientation click functions
-  function portraitClick() {
-    const orientationBtn = document.getElementById("orientationBtn");
-    if (orientationBtn) {
-      orientationBtn.style.left = "0%";
-      config.orientation = "portrait";
-    }
-  }
-
-  function landscapeClick() {
-    const orientationBtn = document.getElementById("orientationBtn");
-    if (orientationBtn) {
-      orientationBtn.style.left = "50%";
-      config.orientation = "landscape";
-    }
-  }
-
   // Initialize toggle buttons (try multiple times)
   initializeToggleButtons();
-  setTimeout(initializeToggleButtons, 1000);
-  setTimeout(initializeToggleButtons, 2000);
 
   // #5 create rectangles
-
-  const POL_CF = 40007863; // Earth's circumference around poles
-  const ECF = 40075016.686; // Earth's circumference around equator
-
   function getBoundsFromMeters(bounds, widthMeters, heightMeters) {
     var centerLat = bounds.getCenter().lat;
     var centerLng = bounds.getCenter().lng;
@@ -456,10 +443,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const heightHalf = heightMeters / 2;
 
     // Calculate the change in longitude (degrees) for the given width in meters
-    const lngDeltaHalf = (widthHalf / (ECF * Math.cos(latRadians))) * 360;
+    const lngDeltaHalf =
+      (widthHalf / (GEO_CONSTANTS.ECF * Math.cos(latRadians))) * 360;
 
     // Calculate the change in latitude (degrees) for the given height in meters
-    const latDeltaHalf = (heightHalf / POL_CF) * 360;
+    const latDeltaHalf = (heightHalf / GEO_CONSTANTS.POL_CF) * 360;
 
     // Calculate the new bounds
     const southWest = L.latLng(
@@ -481,9 +469,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const West = bounds.getWest();
     const widthMeters =
       ((East - West) *
-        (ECF * Math.cos(((North + South) / 2) * (Math.PI / 180)))) /
+        (GEO_CONSTANTS.ECF *
+          Math.cos(((North + South) / 2) * (Math.PI / 180)))) /
       360;
-    const heightMeters = ((North - South) * POL_CF) / 360;
+    const heightMeters = ((North - South) * GEO_CONSTANTS.POL_CF) / 360;
 
     return [widthMeters, heightMeters];
   }
@@ -530,7 +519,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // Determine if user wants landscape or portrait based on current drag
       var isLandscape = currentRatio > 1;
-      var isConfigLandscape = configRatio > 1;
 
       // Calculate target dimensions based on orientation preference
       var targetWidthMeters, targetHeightMeters;
@@ -575,19 +563,22 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // #6 send coordinates
-
-  document
-    .getElementById("download-button")
-    .addEventListener("click", function (event) {
-      event.preventDefault();
-      prepareAndSendData()
-        .then((result) => {
-          console.log("Data sent successfully:", result);
-        })
-        .catch((error) => {
-          console.error("Failed to send data:", error);
-        });
-    });
+  addEventListeners([
+    {
+      id: "download-button",
+      event: "click",
+      handler: (event) => {
+        event.preventDefault();
+        prepareAndSendData()
+          .then((result) => {
+            console.log("Data sent successfully:", result);
+          })
+          .catch((error) => {
+            console.error("Failed to send data:", error);
+          });
+      },
+    },
+  ]);
 
   function prepareAndSendData() {
     document.getElementById("log").style.zIndex = "1000";

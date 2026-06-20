@@ -272,7 +272,7 @@ def draw_icons(image, coordinates, tile_size, symbol="firepit"):
     icon_path = os.path.join(parent_dir, f"icons/{icon_filename}")
 
     icon = Image.open(icon_path)
-    imagesize = int(tile_size / 13)
+    imagesize = int(tile_size / 16)
     icon = icon.resize((imagesize, imagesize))
 
     for position in positions:
