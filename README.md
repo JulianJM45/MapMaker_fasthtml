@@ -37,24 +37,27 @@ A web-based map generation application built with FastHTML that allows users to 
 
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd MapMaker/fasthtml
+git clone https://github.com/JulianJM45/MapMaker_fasthtml.git
+cd MapMaker_fasthtml
 
 # Install dependencies with uv
 uv sync
-
-# Or with pip
-pip install -e .
 ```
 
 ### Running the Application
-
+Quick test
 ```bash
-# Development mode
-uv run uvicorn main:app --reload --host 0.0.0.0 --port 8000
+uv run main.py
+```
 
-# Or directly
-python -m uvicorn main:app --host 0.0.0.0 --port 8000
+Only test backend 
+```bash
+uv run test_backend.py
+```
+
+Development mode
+```bash
+uv run uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 The application will be available at `http://localhost:8000`
