@@ -22,10 +22,6 @@ async def render_maps(data, ws_send=None):
     print(coordinates_list)
     config = data.get("config", {})
 
-    # Log the extracted data
-    # send_message('Coordinates received: ' + str(coordinates_list))
-    # send_message('Config received: ' + str(config))
-
     # Access individual config values
     MAP_STYLE = config.get("tileLayer")
     WIDTH = int(config.get("width"))

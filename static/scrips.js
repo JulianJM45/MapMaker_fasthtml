@@ -145,6 +145,36 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("Layer changed to:", layer_name);
   });
 
+  // add KPE Biwaks
+  const iconKothe = L.icon({
+      iconUrl: "/icons/Kothe_v1.svg",
+      iconSize: [70, 86]
+  });
+
+ const biwakLayer = L.layerGroup();
+  fetch("/api/biwaks")
+    .then(r => r.json())
+    .then(markers => {
+      markers.forEach(([lat, lon]) => {
+        L.marker([lat, lon], { icon: iconKothe}).addTo(biwakLayer);
+        // L.marker([lat, lon]).addTo(biwakLayer);
+      });
+    });
+  // L.marker([48.249972, 11.590917]).addTo(map);
+  function updateBiwaks() {
+    if (map.getZoom() >= 10) {
+      if (!map.hasLayer(biwakLayer)) {
+        map.addLayer(biwakLayer);
+      }
+    } else {
+      if (map.hasLayer(biwakLayer)) {
+        map.removeLayer(biwakLayer);
+      }
+    }
+  }
+
+  map.on("zoomend", updateBiwaks);
+
   // Create slope legend control
   var SlopeLegend = L.Control.extend({
     options: {

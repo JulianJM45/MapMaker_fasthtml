@@ -3,11 +3,18 @@ import os
 import time
 
 import requests
+import cairosvg
 from PIL import Image, ImageDraw, ImageFont
+from io import BytesIO
+
+from pathlib import Path
+import json
 
 POL_CF = 40007863  # Earth's circumference around poles
 ECF = 40075016.686  # Earth's circumference around the equator
 
+with Path("data/KPE_Biwak.json").open() as f:
+    BIWAKS = json.load(f)
 
 myfont = os.path.join(os.path.dirname(__file__), "DejaVuSansMono.ttf")
 slope_tiles = "https://tiles.bergfex.at/data/europe-slope-11-15/{z}/{x}/{y}.png"
@@ -65,6 +72,7 @@ def getMap(index, coordinates, MAP_STYLE, ZOOM, tmpdir, slope=False):
 
     map_image = label(map_image, s_pixel, tile_size, index)
     map_image = draw_icons(map_image, coordinates, tile_size, symbol="firepit")
+    map_image = draw_icons(map_image, coordinates, tile_size, symbol="KPEkothe")
     if "mapy" in MAP_STYLE:
         map_image = draw_icons(map_image, coordinates, tile_size, symbol="spring")
 
@@ -255,7 +263,10 @@ def num2deg(x, y, ZOOM):
 
 def draw_icons(image, coordinates, tile_size, symbol="firepit"):
     positions = []
-    icons = get_icons(coordinates, symbol)
+    if symbol == "KPEkothe":
+        icons = get_KPEicons(coordinates)
+    else:
+        icons = get_icons(coordinates, symbol)
 
     for icon in icons:
         x, y = get_xy(icon[0], icon[1], coordinates, image.width, image.height)
@@ -267,11 +278,16 @@ def draw_icons(image, coordinates, tile_size, symbol="firepit"):
         icon_filename = "120px-Firepit.png"
     elif symbol == "spring":
         icon_filename = "spring.png"
+    elif symbol == "KPEkothe":
+        icon_filename = "Kothe_v1.svg"
     else:
         raise ValueError(f"No icon file_name for {symbol}")
     icon_path = os.path.join(parent_dir, f"icons/{icon_filename}")
 
-    icon = Image.open(icon_path)
+    if icon_filename.lower().endswith(".svg"):
+        icon = Image.open(BytesIO(cairosvg.svg2png(url=icon_path)))
+    else:
+        icon = Image.open(icon_path)
     imagesize = int(tile_size / 16)
     icon = icon.resize((imagesize, imagesize))
 
@@ -346,6 +362,17 @@ def get_icons(coordinates, symbol="firepit"):
 
     return icons
 
+
+def get_KPEicons(coordinates):
+    nwLat, nwLon = coordinates["Northwest"]
+    seLat, seLon = coordinates["SouthEast"]
+
+    icons = []
+    for lat, lon in BIWAKS:
+        if seLat <= lat <= nwLat and nwLon <= lon <= seLon:
+            icons.append((lat, lon))
+
+    return icons
 
 def get_xy(lat, lon, coordinates, pix_w, pix_h):
     nwLat, nwLon = coordinates["Northwest"]

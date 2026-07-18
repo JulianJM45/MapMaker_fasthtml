@@ -1,6 +1,8 @@
 import asyncio
 import os
 import shutil
+from pathlib import Path
+import json
 
 from fasthtml.common import *
 from starlette.responses import FileResponse
@@ -29,6 +31,13 @@ def get():
         id="log",
     )
     return Titled("MapMaker", page, sse)
+
+
+@app.get("/api/biwaks")
+def biwaks():
+    with Path("data/KPE_Biwak.json").open() as f:
+        data = json.load(f)
+    return JSONResponse(data)
 
 
 async def message_generator():
