@@ -3,9 +3,7 @@ import os
 import time
 
 import requests
-import cairosvg
 from PIL import Image, ImageDraw, ImageFont
-from io import BytesIO
 
 from pathlib import Path
 import json
@@ -279,15 +277,12 @@ def draw_icons(image, coordinates, tile_size, symbol="firepit"):
     elif symbol == "spring":
         icon_filename = "spring.png"
     elif symbol == "KPEkothe":
-        icon_filename = "Kothe_v1.svg"
+        icon_filename = "Kothe_v1.png"
     else:
         raise ValueError(f"No icon file_name for {symbol}")
     icon_path = os.path.join(parent_dir, f"icons/{icon_filename}")
 
-    if icon_filename.lower().endswith(".svg"):
-        icon = Image.open(BytesIO(cairosvg.svg2png(url=icon_path)))
-    else:
-        icon = Image.open(icon_path)
+    icon = Image.open(icon_path)
     imagesize = int(tile_size / 16)
     icon = icon.resize((imagesize, imagesize))
 
