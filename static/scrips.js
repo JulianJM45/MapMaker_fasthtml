@@ -148,7 +148,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // add KPE Biwaks
   const iconKothe = L.icon({
       iconUrl: "/icons/Kothe_v1.svg",
-      iconSize: [70, 86]
+      iconSize: [60, 86]
   });
 
  const biwakLayer = L.layerGroup();

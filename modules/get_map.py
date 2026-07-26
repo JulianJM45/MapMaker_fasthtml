@@ -272,18 +272,20 @@ def draw_icons(image, coordinates, tile_size, symbol="firepit"):
 
     current_dir = os.path.dirname(os.path.realpath(__file__))
     parent_dir = os.path.dirname(current_dir)
+    scale = 1.0
     if symbol == "firepit":
         icon_filename = "120px-Firepit.png"
     elif symbol == "spring":
         icon_filename = "spring.png"
     elif symbol == "KPEkothe":
         icon_filename = "Kothe_v1.png"
+        scale = 2.0
     else:
         raise ValueError(f"No icon file_name for {symbol}")
     icon_path = os.path.join(parent_dir, f"icons/{icon_filename}")
 
     icon = Image.open(icon_path)
-    imagesize = int(tile_size / 16)
+    imagesize = int(tile_size / 16 * scale)
     icon = icon.resize((imagesize, imagesize))
 
     for position in positions:
