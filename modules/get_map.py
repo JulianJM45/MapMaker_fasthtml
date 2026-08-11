@@ -17,8 +17,10 @@ with Path("data/KPE_Biwak.json").open() as f:
 myfont = os.path.join(os.path.dirname(__file__), "DejaVuSansMono.ttf")
 slope_tiles = "https://tiles.bergfex.at/data/europe-slope-11-15/{z}/{x}/{y}.png"
 
+markerList = []
 
-def getMap(index, coordinates, MAP_STYLE, ZOOM, tmpdir, slope=False):
+def getMap(index, coordinates, marker_list, MAP_STYLE, ZOOM, tmpdir, slope=False):
+    markerList.extend(marker_list)
     tiles_dir = os.path.join(str(tmpdir), "tiles")
     print(f"Using tiles directory: {tiles_dir}")
     nwLat, nwLon = coordinates["Northwest"]
@@ -71,6 +73,8 @@ def getMap(index, coordinates, MAP_STYLE, ZOOM, tmpdir, slope=False):
     map_image = label(map_image, s_pixel, tile_size, index)
     map_image = draw_icons(map_image, coordinates, tile_size, symbol="firepit")
     map_image = draw_icons(map_image, coordinates, tile_size, symbol="KPEkothe")
+    map_image = draw_icons(map_image, coordinates, tile_size, symbol="marker")
+
     if "mapy" in MAP_STYLE:
         map_image = draw_icons(map_image, coordinates, tile_size, symbol="spring")
 
@@ -263,6 +267,8 @@ def draw_icons(image, coordinates, tile_size, symbol="firepit"):
     positions = []
     if symbol == "KPEkothe":
         icons = get_KPEicons(coordinates)
+    elif symbol == "marker":
+        icons = get_markers(coordinates)
     else:
         icons = get_icons(coordinates, symbol)
 
@@ -275,6 +281,8 @@ def draw_icons(image, coordinates, tile_size, symbol="firepit"):
     scale = 1.0
     if symbol == "firepit":
         icon_filename = "120px-Firepit.png"
+    elif symbol == "marker":
+        icon_filename = "Marker.png"
     elif symbol == "spring":
         icon_filename = "spring.png"
     elif symbol == "KPEkothe":
@@ -290,10 +298,16 @@ def draw_icons(image, coordinates, tile_size, symbol="firepit"):
 
     for position in positions:
         x, y = position
-        position = (
-            int(x - icon.width / 2),
-            int(y - icon.height / 2),
-        )
+        if symbol == "marker":
+            position = (
+                int(x - icon.width / 2),
+                int(y - icon.height),
+            )
+        else:
+            position = (
+                int(x - icon.width / 2),
+                int(y - icon.height / 2),
+            )
         image.paste(icon, position, icon)
 
     icon.close()
@@ -359,6 +373,16 @@ def get_icons(coordinates, symbol="firepit"):
 
     return icons
 
+def get_markers(coordinates):
+    nwLat, nwLon = coordinates["Northwest"]
+    seLat, seLon = coordinates["SouthEast"]
+
+    markers = []
+    for marker in markerList:
+        lat, lon = marker["lat"], marker["lng"]
+        if seLat <= lat <= nwLat and nwLon <= lon <= seLon:
+            markers.append((lat, lon))
+    return markers
 
 def get_KPEicons(coordinates):
     nwLat, nwLon = coordinates["Northwest"]

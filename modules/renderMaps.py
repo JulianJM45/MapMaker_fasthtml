@@ -57,7 +57,7 @@ async def render_maps(data, ws_send=None):
         if ws_send:
             await ws_send(f"Loading Map {index + 1}/{len(coordinatesList)}...")
             await asyncio.sleep(0.01)  # Allow message to be sent
-        getMap(index, coordinates, MAP_STYLE, ZOOM, tmpdir, slope=SLOPE)
+        getMap(index, coordinates, markerList, MAP_STYLE, ZOOM, tmpdir, slope=SLOPE)
         # Extract and assign the coordinates to separate variables
 
         if index % 2 == 0:
