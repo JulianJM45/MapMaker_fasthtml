@@ -157,10 +157,8 @@ document.addEventListener("DOMContentLoaded", function () {
     .then(markers => {
       markers.forEach(([lat, lon]) => {
         L.marker([lat, lon], { icon: iconKothe}).addTo(biwakLayer);
-        // L.marker([lat, lon]).addTo(biwakLayer);
       });
     });
-  // L.marker([48.249972, 11.590917]).addTo(map);
   function updateBiwaks() {
     if (map.getZoom() >= 10) {
       if (!map.hasLayer(biwakLayer)) {
@@ -324,7 +322,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Setup configuration toggle
+  // Set up configuration toggle
   setupConfigurationToggle();
 
   // get elements safely
@@ -346,9 +344,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // Initialize config using Python DEFAULT_CONFIG as fallback
+  // Initialize configuration using Python DEFAULT_CONFIG as fallback
   function getConfigFromForm() {
-    // Use Python config as fallback if window.DEFAULT_CONFIG exists
+    // Use Python configuration as fallback if window.DEFAULT_CONFIG exists
     const defaultConfig = window.DEFAULT_CONFIG || {
       width: 288,
       height: 201,
@@ -511,7 +509,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // draw rectangle
   map.on("draw:created", function (e) {
-    var newRectangle = e.layer; // Store the new drawn rectangle
+    if (e.layerType === "rectangle") {
+      var newRectangle = e.layer; // Store the new drawn rectangle
 
     // Set the rectangle to the fixed size
     var bounds = newRectangle.getBounds();
@@ -536,7 +535,13 @@ document.addEventListener("DOMContentLoaded", function () {
     newRectangle.setBounds(fixedSizeBounds);
     drawnRectangles.push(newRectangle);
     // Add the rectangle to the editable feature group
-    editableLayers.addLayer(newRectangle);
+      editableLayers.addLayer(newRectangle);
+    } else if (e.layerType === "marker") {
+        var marker = e.layer;
+
+        // Marker ganz normal hinzufügen
+        editableLayers.addLayer(marker);
+    }
 
     // # edit rectangles with landscape/portrait switching
     newRectangle.on("edit", function (e) {

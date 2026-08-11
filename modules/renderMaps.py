@@ -18,8 +18,8 @@ async def render_maps(data, ws_send=None):
         await asyncio.sleep(0.01)  # Allow message to be sent
     # print(str(data))
     # Extract coordinates_list and config
-    coordinates_list = data.get("coordinates_list", [])
-    print(coordinates_list)
+    coordinatesList = data.get("coordinates_list", [])
+    print(coordinatesList)
     config = data.get("config", {})
 
     # Access individual config values
@@ -30,7 +30,7 @@ async def render_maps(data, ws_send=None):
     ZOOM = int(config.get("zoom"))
     AutoZoom = config.get("autoZoom")
     if AutoZoom:
-        ZOOM = calculateAutoZoom(coordinates_list[0])
+        ZOOM = calculateAutoZoom(coordinatesList[0])
     # upscale = config.get("upscale")
     Overview = config.get("overview")
     PDF = config.get("pdf")
@@ -40,7 +40,7 @@ async def render_maps(data, ws_send=None):
     odd_maps = []
     even_maps = []
 
-    if len(coordinates_list) > 2:
+    if len(coordinatesList) > 2:
         Overview = True
 
     if Overview:
@@ -48,12 +48,12 @@ async def render_maps(data, ws_send=None):
             await ws_send("Loading Overview Map...")
             await asyncio.sleep(0.01)  # Allow message to be sent
         overviewImage, ovmc = overviewMap(
-            coordinates_list, MAP_STYLE, WIDTH, HEIGHT, tmpdir
+            coordinatesList, MAP_STYLE, WIDTH, HEIGHT, tmpdir
         )
 
-    for index, coordinates in enumerate(coordinates_list):
+    for index, coordinates in enumerate(coordinatesList):
         if ws_send:
-            await ws_send(f"Loading Map {index + 1}/{len(coordinates_list)}...")
+            await ws_send(f"Loading Map {index + 1}/{len(coordinatesList)}...")
             await asyncio.sleep(0.01)  # Allow message to be sent
         getMap(index, coordinates, MAP_STYLE, ZOOM, tmpdir, slope=SLOPE)
         # Extract and assign the coordinates to separate variables
