@@ -511,37 +511,29 @@ document.addEventListener("DOMContentLoaded", function () {
   map.on("draw:created", function (e) {
     if (e.layerType === "rectangle") {
       var newRectangle = e.layer; // Store the new drawn rectangle
+      var bounds = newRectangle.getBounds();
 
-    // Set the rectangle to the fixed size
-    var bounds = newRectangle.getBounds();
+      // Apply orientation - swap width/height for portrait
+      var baseWidth = config.width;
+      var baseHeight = config.height;
 
-    // Apply orientation - swap width/height for portrait
-    var baseWidth = config.width;
-    var baseHeight = config.height;
+      if (config.orientation === "portrait") {
+        baseWidth = config.height;
+        baseHeight = config.width;
+      }
 
-    if (config.orientation === "portrait") {
-      baseWidth = config.height;
-      baseHeight = config.width;
-    }
+      var widthMeters = (baseWidth * config.scale) / 1000;
+      var heightMeters = (baseHeight * config.scale) / 1000;
 
-    var widthMeters = (baseWidth * config.scale) / 1000;
-    var heightMeters = (baseHeight * config.scale) / 1000;
-
-    const fixedSizeBounds = getBoundsFromMeters(
-      bounds,
-      widthMeters,
-      heightMeters,
-    );
-    newRectangle.setBounds(fixedSizeBounds);
-    drawnRectangles.push(newRectangle);
-    // Add the rectangle to the editable feature group
-      editableLayers.addLayer(newRectangle);
-    } else if (e.layerType === "marker") {
-        var marker = e.layer;
-
-        // Marker ganz normal hinzufügen
-        editableLayers.addLayer(marker);
-    }
+      const fixedSizeBounds = getBoundsFromMeters(
+        bounds,
+        widthMeters,
+        heightMeters,
+      );
+      newRectangle.setBounds(fixedSizeBounds);
+      drawnRectangles.push(newRectangle);
+      // Add the rectangle to the editable feature group
+        editableLayers.addLayer(newRectangle);
 
     // # edit rectangles with landscape/portrait switching
     newRectangle.on("edit", function (e) {
@@ -595,6 +587,14 @@ document.addEventListener("DOMContentLoaded", function () {
       );
       newRectangle.setBounds(fixedSizeBounds);
     });
+  }
+    else if (e.layerType === "marker") {
+        var marker = e.layer;
+
+        // Marker ganz normal hinzufügen
+        editableLayers.addLayer(marker);
+    }
+
   });
 
   // #6 send coordinates
@@ -623,6 +623,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Iterate through the drawn rectangles and extract their coordinates
     var coordinates_List = [];
+    var marker_list = [];
     drawnRectangles.forEach(function (rectangle) {
       if (editableLayers.hasLayer(rectangle)) {
         // Check if the rectangle is still active
@@ -637,6 +638,13 @@ document.addEventListener("DOMContentLoaded", function () {
         coordinates_List.push(coordinates);
       }
     });
+
+    editableLayers.eachLayer(function (layer) {
+      if (layer instanceof L.Marker) {
+        marker_list.push(layer.getLatLng());
+      }
+    });
+    console.log("markerList:", marker_list);
 
     // Get the currently selected tile layer (exclude overlay layers like slope)
     var selectedTileLayer = null;
@@ -661,6 +669,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Prepare the data to be sent
     var data = {
       coordinates_list: coordinates_List,
+      markerList: marker_list,
       config: {
         tileLayer: selectedTileLayer,
         width: config.width,

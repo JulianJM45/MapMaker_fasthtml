@@ -20,6 +20,8 @@ async def render_maps(data, ws_send=None):
     # Extract coordinates_list and config
     coordinatesList = data.get("coordinates_list", [])
     print(coordinatesList)
+    markerList = data.get("markerList", [])
+    print(markerList)
     config = data.get("config", {})
 
     # Access individual config values
