@@ -1,7 +1,7 @@
 # %%
 import asyncio
 
-from modules.renderMaps import render_maps
+from modules.render_maps import render_maps
 
 tile_url = [
     "https://a.tile.openstreetmap.de/{z}/{x}/{y}.png",
@@ -11,7 +11,6 @@ tile_url = [
     "https://api.mapy.com/v1/maptiles/outdoor/256@2x/{z}/{x}/{y}?apikey=pLSF5p9ls6uM9fXmmsMieCw0YGl6BC6AERrtMcFLgU0",
     "https://tiles.bergfex.at/styles/bergfex-osm/{z}/{x}/{y}.jpg",
 ]
-
 
 coordinates_list = [
     {

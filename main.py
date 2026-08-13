@@ -1,13 +1,13 @@
 import asyncio
+import json
 import os
 import shutil
 from pathlib import Path
-import json
 
 from fasthtml.common import *
 from starlette.responses import FileResponse
 
-from modules.renderMaps import render_maps
+from modules.render_maps import render_maps
 from modules.ui import body, header
 
 hdrs = (Script(src="https://unpkg.com/htmx-ext-sse@2.2.1/sse.js"),)
@@ -46,7 +46,7 @@ async def message_generator():
             # Wait for a message from the queue with timeout
             message = await asyncio.wait_for(message_queue.get(), timeout=1.0)
             yield sse_message(Div(message))
-        except asyncio.TimeoutError:
+        except TimeoutError:
             continue
         except Exception as e:
             print(f"SSE error: {e}")

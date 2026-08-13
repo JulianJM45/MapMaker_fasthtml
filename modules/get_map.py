@@ -1,12 +1,11 @@
+import json
 import math
 import os
 import time
+from pathlib import Path
 
 import requests
 from PIL import Image, ImageDraw, ImageFont
-
-from pathlib import Path
-import json
 
 POL_CF = 40007863  # Earth's circumference around poles
 ECF = 40075016.686  # Earth's circumference around the equator
@@ -74,9 +73,11 @@ def getMap(index, coordinates, marker_list, MAP_STYLE, ZOOM, tmpdir, slope=False
     map_image = draw_icons(map_image, coordinates, tile_size, symbol="firepit")
     map_image = draw_icons(map_image, coordinates, tile_size, symbol="KPEkothe")
     map_image = draw_icons(map_image, coordinates, tile_size, symbol="marker")
-
     if "mapy" in MAP_STYLE:
         map_image = draw_icons(map_image, coordinates, tile_size, symbol="spring")
+
+    if map_image.height > map_image.width:
+        map_image = map_image.rotate(90, expand=True)
 
     # map_image.show()
     map_image.save(os.path.join(str(tmpdir), f"Map{index + 1}.png"))
@@ -100,7 +101,7 @@ def calculateAutoZoom(coordinates):
 
 
 def getZoom(max_distance):
-    return int(math.log((1.3 * (POL_CF + ECF) / max_distance * 2), 2))
+    return int(math.log2(1.3 * (POL_CF + ECF) / max_distance * 2))
 
 
 def heightFromCoordinates(north, south):

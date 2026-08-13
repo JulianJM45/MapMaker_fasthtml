@@ -69,10 +69,9 @@ async def render_maps(data, ws_send=None):
 
     # Delete the "tiles" directory and its contents
     tiles_dir = os.path.join(str(tmpdir), "tiles")
-    if os.path.exists(tiles_dir):
-        if ws_send:
-            await ws_send("Cleaning up tiles...")
-            await asyncio.sleep(0.01)
+    if os.path.exists(tiles_dir) and ws_send:
+        await ws_send("Cleaning up tiles...")
+        await asyncio.sleep(0.01)
         # shutil.rmtree(tiles_dir)
 
     # Upscale the images if applicable
@@ -96,7 +95,7 @@ async def render_maps(data, ws_send=None):
             await ws_send("Generating PDF...")
             await asyncio.sleep(0.01)
         print("Image paths:", image_paths)
-        file_path = PDFgen(image_paths, tmpdir)
+        file_path = PDFgen(image_paths, tmpdir, WIDTH, HEIGHT)
         print("pdf finished :)")
 
     elif len(image_paths) > 1:
@@ -144,7 +143,7 @@ def drawMapInOverview(overviewImage, ovmc, coordinates, index):
             font = ImageFont.truetype(myfont, size=50)
         else:
             font = ImageFont.load_default()
-    except (OSError, IOError):
+    except OSError:
         font = ImageFont.load_default()
     text_x = (x1 + x2) // 2
     text_y = (y1 + y2) // 2
@@ -234,16 +233,18 @@ def overviewMap(coordinates_list, MAP_STYLE, WIDTH, HEIGHT, tmpdir):
     return overviewImage, ovmc
 
 
-def PDFgen(image_paths, tmpdir):
-    # Read each image in binary mode
+def PDFgen(image_paths, tmpdir, WIDTH, HEIGHT):
     image_bytes_list = []
     for path in image_paths:
         with open(path, "rb") as f:
             image_bytes_list.append(f.read())
 
+    layout_fun = img2pdf.get_layout_fun(
+        pagesize=(img2pdf.mm_to_pt(WIDTH), img2pdf.mm_to_pt(HEIGHT))
+    )
     # Now convert the list of bytes objects to a PDF
     pdf_buffer = io.BytesIO()
-    pdf_buffer.write(img2pdf.convert(image_bytes_list))
+    pdf_buffer.write(img2pdf.convert(image_bytes_list, layout_fun=layout_fun))
 
     # Ensure the buffer is positioned at the beginning
     pdf_buffer.seek(0)
