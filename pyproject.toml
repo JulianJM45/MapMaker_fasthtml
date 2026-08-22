@@ -13,5 +13,25 @@ dependencies = [
     "requests>=2.32.5",
 ]
 
+[dependency-groups]
+dev = [
+    "httpx>=0.27",
+    "pytest>=8.3",
+]
+# Browser tests. Not installed by default:
+#   uv sync --group e2e && uv run playwright install chromium
+#   uv run pytest -m e2e
+e2e = [
+    "playwright>=1.48",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers -m 'not network and not e2e'"
+markers = [
+    "network: hits real tile/Overpass servers; deselected by default",
+    "e2e: drives a real browser via Playwright; deselected by default",
+]
+
 [tool.ruff.lint]
 ignore = ["F403", "F405"]
