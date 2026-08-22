@@ -1,0 +1,9 @@
+{
+  "name": "mapmaker-frontend",
+  "private": true,
+  "type": "module",
+  "description": "Frontend unit tests for MapMaker (no dependencies; uses node:test).",
+  "scripts": {
+    "test": "node --test tests/js/*.test.mjs"
+  }
+}

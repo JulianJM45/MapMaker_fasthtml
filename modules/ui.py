@@ -1,144 +1,138 @@
-# ui.py
-"""UI components and page structure for MapMaker FastHTML application"""
+"""UI components and page structure for the MapMaker FastHTML application.
+
+The configuration panel is deliberately built out of native form controls so
+that every piece of *state* it holds lives in the DOM: which output format is
+selected, which orientation, whether the panel is open at all. That lets CSS
+handle the presentation (the sliding pills, the blurred-out zoom row, opening
+and closing the panel) and leaves JavaScript with only the parts that genuinely
+need it -- talking to Leaflet.
+"""
+
+import json
 
 from fasthtml.common import *
 
-# from .config import DEFAULT_CONFIG
+from . import config as cfg
 
-# External CSS dependencies
-LEAFLET_CSS = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-LEAFLET_DRAW_CSS = "https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css"
-LEAFLET_GEOCODER_CSS = (
-    "https://unpkg.com/leaflet-control-geocoder@1.13.0/dist/Control.Geocoder.css"
-)
-
-# External JS dependencies
-LEAFLET_JS = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-LEAFLET_DRAW_JS = "https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"
-LEAFLET_GPX_JS = "https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.5.1/gpx.min.js"
-LEAFLET_GEOCODER_JS = (
-    "https://unpkg.com/leaflet-control-geocoder@1.13.0/dist/Control.Geocoder.js"
-)
-
-# Local static files
-LOCAL_CSS = "/static/styles.css"
-LOCAL_JS = "/static/scrips.js"
-
-# Default configuration values
-DEFAULT_CONFIG = {
-    "width": 288,
-    "height": 201,
-    "scale": 25000,
-    "zoom": 14,
-    "autoZoom": True,
-    "upscale": False,
-    "overview": False,
-    "pdf": True,
-    "orientation": "landscape",
-}
+SETTINGS_ID = "mapmaker-settings"
 
 
-def header():
-    head = (
+def headers():
+    """Everything that belongs in ``<head>``, in load order."""
+    return (
+        Link(rel="icon", type="image/png", sizes="512x512", href=cfg.FAVICON),
+        Link(rel="stylesheet", href=cfg.LEAFLET_CSS),
+        Link(rel="stylesheet", href=cfg.LEAFLET_DRAW_CSS),
+        Link(rel="stylesheet", href=cfg.LEAFLET_GEOCODER_CSS),
+        Link(rel="stylesheet", href=cfg.LOCAL_CSS),
+        Script(src=cfg.LEAFLET_JS),
+        Script(src=cfg.LEAFLET_DRAW_JS),
+        Script(src=cfg.LEAFLET_GPX_JS),
+        Script(src=cfg.LEAFLET_GEOCODER_JS),
+        Script(src=cfg.SSE_JS),
+    )
+
+
+def page():
+    """The whole document body, as a FastHTML tuple."""
+    return (
         Title("MapMaker fasthtml"),
-        # icon
-        Link(rel="icon", type="image/png", sizes="512x512", href="/icons/icon-512.png"),
-        # CSS files
-        Link(rel="stylesheet", href=LEAFLET_CSS),
-        Link(rel="stylesheet", href=LEAFLET_DRAW_CSS),
-        Link(rel="stylesheet", href=LEAFLET_GEOCODER_CSS),
-        Link(rel="stylesheet", href=LOCAL_CSS),
-        # External JS files
-        Script(src=LEAFLET_JS),
-        Script(src=LEAFLET_DRAW_JS),
-        Script(src=LEAFLET_GPX_JS),
-        Script(src=LEAFLET_GEOCODER_JS),
-        # local JS files
-        Script(src=LOCAL_JS),
-    )
-    return head
-
-
-def body():
-    body = (
+        settings_json(),
         Div(id="map"),
-        Button("Download", id="download-button", cls="control-btn", ws_send="start"),
-        Button("Configure", id="configure-button", cls="control-btn"),
-        Button("GPX", id="gpxButton", cls="control-btn"),
-        Input(type="file", id="gpxFileInput", style="display: none;"),
+        # `download-button` posts through JS; the other two are pure CSS/HTML:
+        # a label opens the panel via a hidden checkbox, another one opens the
+        # file picker via `for=`.
+        Button("Download", id="download-button", cls="control-btn"),
+        Label(
+            "Configure", fr="configure-toggle", id="configure-button", cls="control-btn"
+        ),
+        Label("GPX", fr="gpxFileInput", id="gpxButton", cls="control-btn"),
+        Input(type="file", id="gpxFileInput", accept=".gpx", cls="visually-hidden"),
+        Input(type="checkbox", id="configure-toggle", cls="visually-hidden"),
         configuration_form(),
-        # Div(Div(id="log")),
+        log_panel(),
+        Script(src=cfg.LOCAL_JS, type="module"),
     )
-    return body
+
+
+def settings_json():
+    """Hand the browser its configuration as inert JSON rather than inline JS.
+
+    ``<`` is escaped so no attribution string can close the ``<script>`` early.
+    """
+    payload = json.dumps(cfg.browser_settings()).replace("<", "\\u003c")
+    return Script(payload, type="application/json", id=SETTINGS_ID)
+
+
+def log_panel():
+    """Progress log, appended to by the server over SSE."""
+    return Div(
+        hx_ext="sse",
+        sse_connect="/send-message",
+        hx_swap="beforeend",
+        sse_swap="message",
+        id="log",
+    )
 
 
 def configuration_form():
-    """Create the configuration form panel"""
+    """The settings panel; shown while ``#configure-toggle`` is checked."""
     return Div(
         H3("Edit Configuration"),
-        # Dimensions section
-        # Label("Width (mm):", For="width"),
-        # Input(
-        #     type="number",
-        #     id="width",
-        #     value=str(DEFAULT_CONFIG["width"])
-        # ),
-        # Br(),
-        # Label("Height (mm):", For="height"),
-        # Input(
-        #     type="number",
-        #     id="height",
-        #     value=str(DEFAULT_CONFIG["height"])
-        # ),
-        # Br(),
-        # Scale section
-        Label("Scale 1:", For="scale"),
-        Input(type="number", id="scale", value=str(DEFAULT_CONFIG["scale"])),
+        Label("Scale 1:", fr="scale"),
+        Input(type="number", id="scale", value=str(cfg.DEFAULT_CONFIG["scale"])),
         Br(),
-        # Zoom section
-        Label("AutoZoom:", For="AutoZoom"),
-        Input(type="checkbox", id="AutoZoom", checked=DEFAULT_CONFIG["autoZoom"]),
+        Label("AutoZoom:", fr="AutoZoom"),
+        Input(type="checkbox", id="AutoZoom", checked=cfg.DEFAULT_CONFIG["autoZoom"]),
         Br(),
-        Label("Zoom Level:", For="zoom", id="zoomLabel"),
-        Input(type="number", id="zoom", value=str(DEFAULT_CONFIG["zoom"])),
+        Label("Zoom Level:", fr="zoom", id="zoomLabel"),
+        Input(type="number", id="zoom", value=str(cfg.DEFAULT_CONFIG["zoom"])),
         Br(),
-        Button("Show Zoom Level on map", id="showZoomLevel"),
+        Button("Show Zoom Level on map", type="button", id="showZoomLevel"),
         Br(),
-        # Options section
-        # Label("Upscale Image:", For="Upscale"),
-        # Input(type="checkbox", id="Upscale"),
-        # Br(),
-        # Label("Create Overview Map:", For="Overview"),
-        # Input(type="checkbox", id="Overview"),
-        # Br(),
-        # Output format toggle
-        get_toggle_buttons(),
-        # Orientation toggle
-        get_orientation_toggle(),
-        id="configuration-form",
-        cls="hide",
-    )
-
-
-def get_toggle_buttons():
-    """Create the PDF/PNG toggle button group"""
-    return Div(
-        Div(id="btn"),
-        Button("single PNGs", type="button", cls="toggle-btn", id="leftButton"),
-        Button("bundled PDF", type="button", cls="toggle-btn", id="rightButton"),
-        cls="button-box",
-    )
-
-
-def get_orientation_toggle():
-    """Create the portrait/landscape toggle button group"""
-    return Div(
+        pill_toggle(
+            "format",
+            "btn",
+            ("leftButton", "single PNGs"),
+            ("rightButton", "bundled PDF"),
+            checked_right=cfg.DEFAULT_CONFIG["pdf"],
+        ),
         Br(),
         Label("Orientation:"),
-        Div(
-            Div(id="orientationBtn"),
-            Button("Portrait", type="button", cls="toggle-btn", id="portraitButton"),
-            Button("Landscape", type="button", cls="toggle-btn", id="landscapeButton"),
-            cls="button-box orientation-box",
+        pill_toggle(
+            "orientation",
+            "orientationBtn",
+            ("portraitButton", "Portrait"),
+            ("landscapeButton", "Landscape"),
+            checked_right=cfg.DEFAULT_CONFIG["orientation"] == "landscape",
+            cls="orientation-box",
         ),
+        id="configuration-form",
+    )
+
+
+def pill_toggle(name, pill_id, left, right, checked_right, cls=""):
+    """A two-option switch: a radio pair with a pill that slides behind them.
+
+    The pill is positioned purely from `:checked` in CSS, so the selection is
+    readable straight off the DOM and survives without any JavaScript.
+    """
+
+    def option(opt_id, text, checked):
+        return (
+            Input(
+                type="radio",
+                name=name,
+                id=opt_id,
+                cls="toggle-input",
+                checked=checked,
+            ),
+            Label(text, fr=opt_id, cls="toggle-btn"),
+        )
+
+    return Div(
+        Div(id=pill_id, cls="toggle-pill"),
+        *option(left[0], left[1], not checked_right),
+        *option(right[0], right[1], checked_right),
+        cls=f"button-box {cls}".strip(),
     )

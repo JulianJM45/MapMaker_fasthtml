@@ -10,8 +10,8 @@ from PIL import Image, ImageDraw, ImageFont
 POL_CF = 40007863  # Earth's circumference around poles
 ECF = 40075016.686  # Earth's circumference around the equator
 
-with Path("data/KPE_Biwak.json").open() as f:
-    BIWAKS = json.load(f)
+BIWAKS_FILE = Path(__file__).resolve().parent.parent / "data" / "KPE_Biwak.json"
+BIWAKS = json.loads(BIWAKS_FILE.read_text())
 
 myfont = os.path.join(os.path.dirname(__file__), "DejaVuSansMono.ttf")
 slope_tiles = "https://tiles.bergfex.at/data/europe-slope-11-15/{z}/{x}/{y}.png"
