@@ -132,7 +132,7 @@ def pill_toggle(name, pill_id, left, right, checked_right, cls=""):
 
     return Div(
         Div(id=pill_id, cls="toggle-pill"),
-        *option(*left, not checked_right),
-        *option(*right, checked_right),
+        *option(left[0], left[1], not checked_right),
+        *option(right[0], right[1], checked_right),
         cls=f"button-box {cls}".strip(),
     )
