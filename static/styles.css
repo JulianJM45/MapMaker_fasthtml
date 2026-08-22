@@ -115,7 +115,14 @@
 .orientation-box {
   width: 250px;
 }
-
+/* Radio-Buttons unsichtbar machen, da wir nur die Labels anklicken */
+.toggle-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
 .toggle-btn {
   display: inline-block;
   box-sizing: border-box;
