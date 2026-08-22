@@ -106,6 +106,10 @@
   position: relative;
   border-radius: 30px;
   background: #fff;
+  /* NEU: Erzwingt nebeneinanderliegende Ausrichtung */
+    display: flex;
+    align-items: center;
+
 }
 
 .orientation-box {
