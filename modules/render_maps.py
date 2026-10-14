@@ -26,8 +26,8 @@ async def render_maps(data, ws_send=None):
 
     # Access individual config values
     MAP_STYLE = config.get("tileLayer")
-    WIDTH = int(config.get("width"))
-    HEIGHT = int(config.get("height"))
+    paperWidth = int(config.get("width"))
+    paperHeight = int(config.get("height"))
     # SCALE = int(config.get("scale"))
     ZOOM = int(config.get("zoom"))
     AutoZoom = config.get("autoZoom")
@@ -50,7 +50,7 @@ async def render_maps(data, ws_send=None):
             await ws_send("Loading Overview Map...")
             await asyncio.sleep(0.01)  # Allow message to be sent
         overviewImage, ovmc = overviewMap(
-            coordinatesList, MAP_STYLE, WIDTH, HEIGHT, tmpdir
+            coordinatesList, MAP_STYLE, paperWidth, paperHeight, tmpdir
         )
 
     for index, coordinates in enumerate(coordinatesList):
@@ -66,6 +66,9 @@ async def render_maps(data, ws_send=None):
             even_maps.append(str(tmpdir / f"Map{index + 1}.png"))
         if Overview:
             overviewImage = drawMapInOverview(overviewImage, ovmc, coordinates, index)
+
+    if Overview and overviewImage.height > overviewImage.width:
+        overviewImage = overviewImage.rotate(90, expand=True)
 
     # Delete the "tiles" directory and its contents
     tiles_dir = os.path.join(str(tmpdir), "tiles")
@@ -95,7 +98,7 @@ async def render_maps(data, ws_send=None):
             await ws_send("Generating PDF...")
             await asyncio.sleep(0.01)
         print("Image paths:", image_paths)
-        file_path = PDFgen(image_paths, tmpdir, WIDTH, HEIGHT)
+        file_path = PDFgen(image_paths, tmpdir, paperWidth, paperHeight)
         print("pdf finished :)")
 
     elif len(image_paths) > 1:
@@ -159,7 +162,7 @@ def drawMapInOverview(overviewImage, ovmc, coordinates, index):
     return overviewImage
 
 
-def overviewMap(coordinates_list, MAP_STYLE, WIDTH, HEIGHT, tmpdir):
+def overviewMap(coordinates_list, MAP_STYLE, paperWidth, paperHeight, tmpdir):
     tiles_dir = os.path.join(str(tmpdir), "tiles")
     # Initialize variables to store the maximum values
     max_north = max_south = max_east = max_west = None
@@ -194,19 +197,37 @@ def overviewMap(coordinates_list, MAP_STYLE, WIDTH, HEIGHT, tmpdir):
     WIDTH_METERS = widthFromCoordinates(max_west, max_east, latitude)
     max_distance = max(HEIGHT_METERS, WIDTH_METERS)
     ZOOM = getZoom(max_distance)
+
     # rescaling
-    if WIDTH_METERS > (HEIGHT_METERS * WIDTH / HEIGHT):
-        HEIGHT_METERS = WIDTH_METERS * HEIGHT / WIDTH
-        max_north = latitude + 360 * (HEIGHT_METERS / 2) / POL_CF
-        max_south = latitude - 360 * (HEIGHT_METERS / 2) / POL_CF
-    elif HEIGHT_METERS > (WIDTH_METERS * HEIGHT / WIDTH):
-        WIDTH_METERS = HEIGHT_METERS * WIDTH / HEIGHT
+    def rescaleWidth(HEIGHT_METERS, paperWidth, paperHeight):
+        WIDTH_METERS = HEIGHT_METERS * paperWidth / paperHeight
         max_east = longitude + 360 * (WIDTH_METERS / 2) / (
             ECF * math.cos(math.radians(latitude))
         )
         max_west = longitude - 360 * (WIDTH_METERS / 2) / (
             ECF * math.cos(math.radians(latitude))
         )
+        return WIDTH_METERS, max_east, max_west
+
+    def rescaleHeight(WIDTH_METERS, paperWidth, paperHeight):
+        HEIGHT_METERS = WIDTH_METERS * paperHeight / paperWidth
+        max_north = latitude + 360 * (HEIGHT_METERS / 2) / POL_CF
+        max_south = latitude - 360 * (HEIGHT_METERS / 2) / POL_CF
+        return HEIGHT_METERS, max_north, max_south
+
+    # landscape
+    if WIDTH_METERS > HEIGHT_METERS:
+        if WIDTH_METERS > (HEIGHT_METERS * paperWidth / paperHeight):
+            HEIGHT_METERS, max_north, max_south = rescaleHeight(WIDTH_METERS, paperWidth, paperHeight)
+        else:
+            WIDTH_METERS, max_east, max_west = rescaleWidth(HEIGHT_METERS, paperWidth, paperHeight)
+    # portrait
+    else:
+        if HEIGHT_METERS > (WIDTH_METERS * paperHeight / paperWidth):
+            WIDTH_METERS, max_east, max_west = rescaleWidth(HEIGHT_METERS, paperHeight, paperWidth)
+        else:
+            HEIGHT_METERS, max_north, max_south = rescaleHeight(WIDTH_METERS, paperHeight, paperWidth)
+
     # Calculate tiles
     x1, y1 = deg2num(max_north, max_west, ZOOM)
     x2, y2 = deg2num(max_south, max_east, ZOOM)
@@ -230,6 +251,7 @@ def overviewMap(coordinates_list, MAP_STYLE, WIDTH, HEIGHT, tmpdir):
     overviewImage = cropBorders(
         max_north, max_west, lon1, lat1, s_pixel, pix_w, pix_h, overviewImage
     )
+
     return overviewImage, ovmc
 
 
